@@ -2,7 +2,7 @@
 
 import sys
 import pygame
-import string
+import time
 import copy
 import queue
 
@@ -327,6 +327,8 @@ size = game.load_size()
 screen = pygame.display.set_mode(size)
 step = 0 
 
+
+
 start_state = StateSpace(matrix =game.get_matrix())
 moves = [(0,-1),(0,1),(-1,0),(1,0)]
 SE = Search('DFS',start_state,moves)
@@ -334,28 +336,34 @@ SE = Search('DFS',start_state,moves)
 
 SE.search(state=start_state)
 move_list = SE.path  # Giả sử SE.path là danh sách các bước di chuyển.
-index = 0  # Khởi tạo chỉ số cho các bước di chuyển.
-
+# Thiết lập một flag để kiểm soát thứ tự cập nhật và hiển thị
+index = 0 
+is_drawn = True  # Khởi tạo với True để bắt đầu di chuyển đầu tiên
 
 while True:
-    # Kiểm tra nếu game đã hoàn tất
-    if game.is_completed():
-        print("end")
-        break
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            sys.exit(0)
 
-    # In ra game
-    print_game(game.get_matrix(), screen)
-
-    # Tự động di chuyển theo danh sách move_list
-    if index < len(move_list):
+    # Chỉ thực hiện di chuyển nếu lần cập nhật màn hình trước đó đã hoàn tất
+    if is_drawn and index < len(move_list):
         dx, dy = move_list[index]
         game.move(dx, dy, False)  # Thực hiện di chuyển
-        index += 1  # Cập nhật chỉ số để thực hiện bước tiếp theo
+        index += 1
+        is_drawn = False  # Đặt lại flag, chờ việc vẽ hoàn tất
 
     # Cập nhật màn hình
+    print_game(game.get_matrix(), screen)
     pygame.display.update()
+    is_drawn = True  # Đặt lại flag sau khi cập nhật xong màn hình
 
-    # Thêm một delay nếu cần để di chuyển không quá nhanh
-    pygame.time.delay(100)  # Delay 100 ms giữa các bước di chuyển
+    # Kiểm tra xem game đã hoàn tất hay chưa
+    if game.is_completed():
+        print("end")
+        pygame.display.update()
+        time.sleep(3)  # Chờ 3 giây trước khi thoát
+        sys.exit(0)
+    pygame.time.delay(100)
+ # Delay 100 ms giữa các bước di chuyển
 
 
