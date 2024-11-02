@@ -6,7 +6,7 @@ import string
 import copy
 import queue
 
-# from statespace import StateSpace, Search
+from statespace import StateSpace, Search
 
 class game:
 
@@ -327,13 +327,13 @@ size = game.load_size()
 screen = pygame.display.set_mode(size)
 step = 0 
 
-# start_state = StateSpace(matrix =game.get_matrix())
-# moves = [(0,-1),(0,1),(-1,0),(1,0)]
-# SE = Search('DFS',start_state,moves)
-# start_state.print_matrix()
+start_state = StateSpace(matrix =game.get_matrix())
+moves = [(0,-1),(0,1),(-1,0),(1,0)]
+SE = Search('DFS',start_state,moves)
+start_state.print_matrix()
 
 
-# SE.search(state=start_state)
+SE.search(state=start_state)
 
 while 1:
     if game.is_completed(): display_end(screen)

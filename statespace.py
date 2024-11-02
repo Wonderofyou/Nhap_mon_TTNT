@@ -151,15 +151,10 @@ class Search :
     def search(self,state):
         if self.search_alg == 'DFS':
             StateSpace.open_close_set.add(state.to_string())
-            # print("new state")
-            # state.print_matrix()
-            # print('\n')
-            Search.path.append(state.matrix)
             if state.is_completed():
                 return True
             for move in self.moves :
-                # print(move)
-                # Search.path.append(move)
+                Search.path.append(move)
                 matrix = copy.deepcopy(state.get_matrix())
                 child = StateSpace(matrix)
                 res = child.get_child(move[0], move[1])
@@ -169,8 +164,7 @@ class Search :
                     if child_string not in StateSpace.open_close_set:
                         if self.search(child):
                             return True
-                        
-            Search.path.pop()
+                Search.path.pop()
             return False
                 
     
@@ -203,11 +197,11 @@ class Search :
 #             else:
 #                 break
 
-start_state = StateSpace(matrix=matrix)
-moves = [(0,-1),(0,1),(-1,0),(1,0)]
+# start_state = StateSpace(matrix=matrix)
+# moves = [(0,-1),(0,1),(-1,0),(1,0)]
 
     
-SE = Search('DFS',start_state,moves)
+# SE = Search('DFS',start_state,moves)
 
 
 
