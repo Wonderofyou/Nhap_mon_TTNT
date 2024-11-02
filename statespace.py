@@ -164,7 +164,8 @@ class Search :
                     if child_string not in StateSpace.open_close_set:
                         if self.search(child):
                             return True
-                        Search.path.pop()
+                Search.path.pop()
+
             return False
                 
     

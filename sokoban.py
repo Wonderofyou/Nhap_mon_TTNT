@@ -330,17 +330,18 @@ step = 0
 start_state = StateSpace(matrix =game.get_matrix())
 moves = [(0,-1),(0,1),(-1,0),(1,0)]
 SE = Search('DFS',start_state,moves)
-start_state.print_matrix()
 
 
 SE.search(state=start_state)
 move_list = SE.path  # Giả sử SE.path là danh sách các bước di chuyển.
 index = 0  # Khởi tạo chỉ số cho các bước di chuyển.
 
+
 while True:
     # Kiểm tra nếu game đã hoàn tất
     if game.is_completed():
-        display_end(screen)
+        print("end")
+        break
 
     # In ra game
     print_game(game.get_matrix(), screen)
@@ -357,30 +358,4 @@ while True:
     # Thêm một delay nếu cần để di chuyển không quá nhanh
     pygame.time.delay(100)  # Delay 100 ms giữa các bước di chuyển
 
-
-# while 1:
-#     if game.is_completed(): display_end(screen)
-#     print_game(game.get_matrix(),screen)
-#     for event in pygame.event.get():
-#         if event.type == pygame.QUIT: 
-#             sys.exit(0)
-#         keys = pygame.key.get_pressed()
-#         if keys[pygame.K_UP]: 
-#             game.move(0, -1, True)
-#         elif keys[pygame.K_DOWN]: 
-#             game.move(0, 1, True)
-#         elif keys[pygame.K_LEFT]: 
-#             game.move(-1, 0, True)
-#         elif keys[pygame.K_RIGHT]: 
-#             game.move(1, 0, True)
-#         elif keys[pygame.K_q]: 
-#             sys.exit(0)
-#         elif keys[pygame.K_d]: 
-#             print("undo")
-#             game.unmove()
-
-
-#     # for move in SE.path:
-#     #     game.move(move[0], move[1],False)
-#     pygame.display.update()
 
