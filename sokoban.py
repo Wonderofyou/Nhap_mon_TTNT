@@ -330,7 +330,7 @@ step = 0
 
 
 start_state = StateSpace(matrix =game.get_matrix())
-moves = [(0,-1),(0,1),(-1,0),(1,0)]
+moves = [(0,-1),(0,1),(-1,0),(1,0)]#UP , DOWN, LEFT, RIGHT
 SE = Search('DFS',start_state,moves)
 
 
