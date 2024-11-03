@@ -1,6 +1,6 @@
 import sys
 import copy
-import json
+from collections import deque
 
 sys.setrecursionlimit(5000)
 
@@ -8,18 +8,17 @@ class StateSpace:
     open_close_set = set()
 
     def __init__(self, filename=None, weights=None, boxes=None, matrix=None):
-        if filename:
+        if filename: #init by file
             self.load_from_file(filename)
-        else:
+        else: #init by parameter
             self.weights = weights if weights is not None else []
             self.box = boxes if boxes is not None else []
             self.matrix = matrix if matrix is not None else []
 
-            # Nếu không có trọng số hoặc hộp nào được cung cấp, hãy đặt chúng thành mặc định
             if not self.weights:
-                self.weights = [1] * len(self.box)  # Mặc định trọng số bằng 1 cho mỗi hộp
+                self.weights = [1] * len(self.box)  # default 1
             for i, weight in enumerate(self.weights):
-                if i < len(self.box):  # Kiểm tra nếu index i không vượt quá số lượng hộp
+                if i < len(self.box):  
                     self.box[i].append(weight)
 
     def load_from_file(self,filename):
@@ -28,7 +27,6 @@ class StateSpace:
         with open(filename,'r') as f :
             first_line = f.readline().strip()
     
-            # Tách các số từ dòng đầu tiên và chuyển thành int
             self.weights = [int(num) for num in first_line.split()]
             for i, line in enumerate(f):
                 row = []
@@ -50,12 +48,12 @@ class StateSpace:
 
     def get_matrix(self):
         return self.matrix
-    def to_string(self):
+    def to_string(self):#encoding a State to string 
         s = []
         for row in self.get_matrix():
-            s.append("".join(row))
+            s.append("".join(row)) #matrix -> string
         for box in self.box:
-            s.append(str(box[2]))
+            s.append(str(box[2])) #add weight to s
 
         return "".join(s)
         
@@ -85,7 +83,7 @@ class StateSpace:
             y = y + 1
             x = 0
 
-    def can_move(self,x,y):
+    def can_move(self,x,y): #(0,1)(0,-1)
         return self.get_content(self.worker()[0]+x,self.worker()[1]+y) not in ['#','*','$']
 
     def next(self,x,y):
@@ -100,7 +98,7 @@ class StateSpace:
                 if cell == '$':
                     return False
         return True
-    def set_box(self,x,y,z,t): #box (x,y) thành box(z,t)
+    def set_box(self,x,y,z,t): #box(x,y) -> box(z,t)
         for box in self.box:
             if box[0]==x and box[1]==y:
                 box[0]= z
@@ -112,8 +110,8 @@ class StateSpace:
         future_box = self.get_content(x+a,y+b)
         if current_box == '$' and future_box == ' ':
             self.set_content(x+a,y+b,'$')
-            self.set_content(x,y,' ')
-            self.set_box(x,y,x+a,y+b)
+            self.set_content(x,y,' ')#update on matrix only
+            self.set_box(x,y,x+a,y+b)#update on self.box
         elif current_box == '$' and future_box == '.':
             self.set_content(x+a,y+b,'*')
             self.set_content(x,y,' ')
@@ -202,27 +200,37 @@ class Search :
     def __init__(self,search_alg, state, moves):
         self.search_alg = search_alg
         self.start = state
-        self.moves = moves
+        self.moves = moves  
     
     def search(self,state):
         if self.search_alg == 'DFS':
-            StateSpace.open_close_set.add(state.to_string())
-            if state.is_completed():
-                return True
-            for move in self.moves[::-1] :
-                Search.path.append(move)
-                
-                child = copy.deepcopy(state)
-                res = child.get_child(move[0], move[1])
-                if res is not None:
-                    child_string = child.to_string()
-                    #print(child_string)
-                    if child_string not in StateSpace.open_close_set:
-                        if self.search(child):
-                            return True
-                Search.path.pop()
+            # return False
+            stack =  deque([(state, [])])# Stack holds tuples of (state, path taken to reach this state)
+            StateSpace.open_close_set.add(state.to_string())  # Initial state added to visited set
 
-            return False
+            while stack:
+                current_state, path = stack.pop()
+                if current_state.is_completed():
+                    return True
+                # Process moves in reverse order for DFS-like behavior
+                for move in self.moves:
+                    child = copy.deepcopy(current_state)
+                    res = child.get_child(move[0], move[1])
+                    
+                    if res is not None:
+                        child_string = child.to_string()
+
+                        # Only check if it's complete after verifying the state hasn't been visited
+                        if child_string not in StateSpace.open_close_set:
+                            StateSpace.open_close_set.add(child_string)
+                            
+                            # Now, check if the current state is completed
+                            if child.is_completed():
+                                Search.path = path + [move]  # Final path to completion
+                                return True
+                            
+                            # If not complete, add it to the stack for further exploration
+                            stack.append((child, path + [move]))
                 
     
 
@@ -230,7 +238,7 @@ class Search :
 # start_state.print_matrix()
 # print(start_state.box)
 # print(start_state.to_string())
-# moves = [(0,-1),(0,1),(-1,0),(1,0)]
+# moves = [(0,-1),(0,1),(-1,0),(1,0)] #DULR
 # SE = Search('DFS',state=start_state,moves=moves)
 # SE.search(state=start_state)
 # print(SE.path)

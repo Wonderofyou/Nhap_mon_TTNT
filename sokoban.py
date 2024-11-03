@@ -329,12 +329,14 @@ step = 0
 
 
 
-start_state = StateSpace(matrix =game.get_matrix())
-moves = [(0,-1),(0,1),(-1,0),(1,0)]#UP , DOWN, LEFT, RIGHT
-SE = Search('DFS',start_state,moves)
-
-
+start_state = StateSpace('levels_weight')
+start_state.print_matrix()
+print(start_state.box)
+print(start_state.to_string())
+moves = [(0,-1),(0,1),(-1,0),(1,0)]
+SE = Search('DFS',state=start_state,moves=moves)
 SE.search(state=start_state)
+print(SE.path)
 move_list = SE.path  # Giả sử SE.path là danh sách các bước di chuyển.
 # Thiết lập một flag để kiểm soát thứ tự cập nhật và hiển thị
 index = 0 
@@ -363,7 +365,7 @@ while True:
         pygame.display.update()
         time.sleep(3)  # Chờ 3 giây trước khi thoát
         sys.exit(0)
-    pygame.time.delay(100)
+    pygame.time.delay(50)
  # Delay 100 ms giữa các bước di chuyển
 
 
