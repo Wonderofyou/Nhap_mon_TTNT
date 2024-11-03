@@ -330,15 +330,14 @@ step = 0
 
 
 start_state = StateSpace('levels_weight')
-start_state.print_matrix()
-print(start_state.box)
-print(start_state.to_string())
+# start_state.print_matrix()
+# print(start_state.box)
+# print(start_state.to_string())
 moves = [(0,-1),(0,1),(-1,0),(1,0)]
 SE = Search('DFS',state=start_state,moves=moves)
-SE.search(state=start_state)
-print(SE.path)
-move_list = SE.path  # Giả sử SE.path là danh sách các bước di chuyển.
-# Thiết lập một flag để kiểm soát thứ tự cập nhật và hiển thị
+
+
+total_weight,size, move_list, flag, node = SE.search() 
 index = 0 
 is_drawn = True  # Khởi tạo với True để bắt đầu di chuyển đầu tiên
 

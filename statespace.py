@@ -2,7 +2,6 @@ import sys
 import copy
 from collections import deque
 
-sys.setrecursionlimit(5000)
 
 class StateSpace:
     open_close_set = set()
@@ -103,6 +102,7 @@ class StateSpace:
             if box[0]==x and box[1]==y:
                 box[0]= z
                 box[1] = t
+                return box[2] # get the weight
     def move_box(self,x,y,a,b):
 #        (x,y) -> move to do
 #        (a,b) -> box to move
@@ -111,41 +111,39 @@ class StateSpace:
         if current_box == '$' and future_box == ' ':
             self.set_content(x+a,y+b,'$')
             self.set_content(x,y,' ')#update on matrix only
-            self.set_box(x,y,x+a,y+b)#update on self.box
+            weight = self.set_box(x,y,x+a,y+b)#update on self.box
         elif current_box == '$' and future_box == '.':
             self.set_content(x+a,y+b,'*')
             self.set_content(x,y,' ')
-            self.set_box(x,y,x+a,y+b)
+            weight =  self.set_box(x,y,x+a,y+b)
         elif current_box == '*' and future_box == ' ':
             self.set_content(x+a,y+b,'$')
             self.set_content(x,y,'.')
-            self.set_box(x,y,x+a,y+b)
+            weight =  self.set_box(x,y,x+a,y+b)
         elif current_box == '*' and future_box == '.':
             self.set_content(x+a,y+b,'*')
             self.set_content(x,y,'.')
-            self.set_box(x,y,x+a,y+b)
+            weight = self.set_box(x,y,x+a,y+b)
+        return weight
+    
 
-
-    def get_child(self,x,y): 
+    def get_child(self,x,y): #return (weight, push or not)
         if self.can_move(x,y):
             current = self.worker()
             future = self.next(x,y)
             if current[2] == '@' and future == ' ':
                 self.set_content(current[0]+x,current[1]+y,'@')
                 self.set_content(current[0],current[1],' ')
-            elif current[2] == '@' and future == '.': 
-                    
+            elif current[2] == '@' and future == '.':   
                 self.set_content(current[0]+x,current[1]+y,'+')
                 self.set_content(current[0],current[1],' ')
-            elif current[2] == '+' and future == ' ': 
-                    
+            elif current[2] == '+' and future == ' ':
                 self.set_content(current[0]+x,current[1]+y,'@')
                 self.set_content(current[0],current[1],'.')
             elif current[2] == '+' and future == '.': 
-                    
                 self.set_content(current[0]+x,current[1]+y,'+')
                 self.set_content(current[0],current[1],'.')
-            return self.matrix 
+            return (0,False) 
                 
         elif self.can_push(x,y):      
             current = self.worker()
@@ -153,119 +151,159 @@ class StateSpace:
             future_box = self.next(x+x,y+y)
 
             if current[2] == '@' and future == '$' and future_box == ' ':
-                self.move_box(current[0]+x,current[1]+y,x,y)
+                weight = self.move_box(current[0]+x,current[1]+y,x,y)
                 self.set_content(current[0],current[1],' ')
                 self.set_content(current[0]+x,current[1]+y,'@')
 
             elif current[2] == '@' and future == '$' and future_box == '.':
-                self.move_box(current[0]+x,current[1]+y,x,y)
+                weight = self.move_box(current[0]+x,current[1]+y,x,y)
                 self.set_content(current[0],current[1],' ')
                 self.set_content(current[0]+x,current[1]+y,'@')
     
             elif current[2] == '@' and future == '*' and future_box == ' ':
-                self.move_box(current[0]+x,current[1]+y,x,y)
+                weight = self.move_box(current[0]+x,current[1]+y,x,y)
                 self.set_content(current[0],current[1],' ')
                 self.set_content(current[0]+x,current[1]+y,'+')
 
             elif current[2] == '@' and future == '*' and future_box == '.':
-                self.move_box(current[0]+x,current[1]+y,x,y)
+                weight = self.move_box(current[0]+x,current[1]+y,x,y)
                 self.set_content(current[0],current[1],' ')
                 self.set_content(current[0]+x,current[1]+y,'+')
 
             if current[2] == '+' and future == '$' and future_box == ' ':
-                self.move_box(current[0]+x,current[1]+y,x,y)
+                weight = self.move_box(current[0]+x,current[1]+y,x,y)
                 self.set_content(current[0],current[1],'.')
                 self.set_content(current[0]+x,current[1]+y,'@')
 
             elif current[2] == '+' and future == '$' and future_box == '.':
-                self.move_box(current[0]+x,current[1]+y,x,y)
+                weight = self.move_box(current[0]+x,current[1]+y,x,y)
                 self.set_content(current[0],current[1],'.')
                 self.set_content(current[0]+x,current[1]+y,'+')
 
             elif current[2] == '+' and future == '*' and future_box == ' ':
-                self.move_box(current[0]+x,current[1]+y,x,y)
+                weight = self.move_box(current[0]+x,current[1]+y,x,y)
                 self.set_content(current[0],current[1],'.')
                 self.set_content(current[0]+x,current[1]+y,'+')
 
             elif current[2] == '+' and future == '*' and future_box == '.':
-                self.move_box(current[0]+x,current[1]+y,x,y)
+                weight = self.move_box(current[0]+x,current[1]+y,x,y)
                 self.set_content(current[0],current[1],'.')
                 self.set_content(current[0]+x,current[1]+y,'+')
-            return self.matrix    
+            return (weight,True)     
         return None
 
-class Search :
-    path = []
+import sys
+from collections import deque
+import copy
 
-    def __init__(self,search_alg, state, moves):
+class Search:
+    def __init__(self, search_alg, state, moves):
         self.search_alg = search_alg
         self.start = state
         self.moves = moves  
-    
-    def search(self,state):
+
+    from collections import deque
+import sys
+import copy
+
+class Search:
+    def __init__(self, search_alg, state, moves):
+        self.search_alg = search_alg
+        self.start = state
+        self.moves = moves  
+
+    def search(self):
         if self.search_alg == 'DFS':
-            # return False
-            stack =  deque([(state, [])])# Stack holds tuples of (state, path taken to reach this state)
-            StateSpace.open_close_set.add(state.to_string())  # Initial state added to visited set
+            stack = deque([(self.start, [], 0, [])])  # Stack holds tuples of (state, path, weight, flag)
+            StateSpace.open_close_set.add(self.start.to_string())
+            node = 1
+            size = sys.getsizeof(self.start)
 
             while stack:
-                current_state, path = stack.pop()
+                current_state, path, current_weight, flag = stack.pop()
+
                 if current_state.is_completed():
-                    return True
-                # Process moves in reverse order for DFS-like behavior
+                    return current_weight, size / (1024 * 1024), path, flag, node
+
                 for move in self.moves:
                     child = copy.deepcopy(current_state)
                     res = child.get_child(move[0], move[1])
-                    
+                    node += 1
+
                     if res is not None:
+                        child_weight = res[0]  # Trọng số của trạng thái co
                         child_string = child.to_string()
 
-                        # Only check if it's complete after verifying the state hasn't been visited
+                        # Chỉ tiến hành nếu trạng thái chưa được thăm
                         if child_string not in StateSpace.open_close_set:
                             StateSpace.open_close_set.add(child_string)
-                            
-                            # Now, check if the current state is completed
+
                             if child.is_completed():
-                                Search.path = path + [move]  # Final path to completion
-                                return True
-                            
-                            # If not complete, add it to the stack for further exploration
-                            stack.append((child, path + [move]))
+                                # Nếu trạng thái hoàn thành, không cần thêm vào ngăn xếp
+                                return current_weight+res[0], size / (1024 * 1024), path + [move], flag + [res[1]], node
+
+                            # Thêm trạng thái con vào ngăn xếp với trọng số
+                            stack.append((child, path + [move], current_weight+res[0], flag + [res[1]]))
+
+
+            return 0, size / (1024 * 1024), [], flag, node
+
+
+
+
+import os              
+import time
+def write_to_file(inputfile,outputfile, algorithms, moves = [(0,-1),(0,1),(-1,0),(1,0)]):
+    if not os.path.exists(outputfile):
+        start_state = StateSpace(filename=inputfile)
+        for algorithm in algorithms :
+            search_engine = Search(search_alg=algorithm,state=start_state,moves=moves )
+            start_time = time.time()
+            total_weight,size, path, flag, node  =  search_engine.search()
+            end_time = time.time()
+            total_time = 1000*(end_time-start_time)
+            path_str = []
+            for (i,move) in enumerate(path) :
+                if move == (0,-1):
+                    if flag[i]:
+                        path_str.append('D')
+                    elif flag[i] ==1:
+                        path_str.append('d')
+
+                elif move == (0,1):
+                    if flag[i] :
+                        path_str.append('U')
+                    elif flag[i] ==1:
+                        path_str.append('u')
                 
+                elif move == (-1,0):
+                    if flag[i]:
+                        path_str.append('L')
+                    elif flag[i] ==1:
+                        path_str.append('l')
+
+                elif move == (1,0):
+                    if flag[i] :
+                        path_str.append('R')
+                    elif flag[i]:
+                        path_str.append('r')
+            path_str = "".join(path_str)
+            print(len(path),total_weight)
+            with open(outputfile,'w') as f:
+                f.write(algorithm+'\n')
+                f.write(f"Steps: {len(flag)}, Weight: {total_weight}, Node: {node}, Time (ms): {total_time}, Memory(MB): {size}\n")
+                f.write(path_str+'\n')
+
+write_to_file('levels_weight','output',['DFS'])
+                
+
+
+
+
+
     
 
-# start_state = StateSpace('levels_weight')
-# start_state.print_matrix()
-# print(start_state.box)
-# print(start_state.to_string())
-# moves = [(0,-1),(0,1),(-1,0),(1,0)] #DULR
-# SE = Search('DFS',state=start_state,moves=moves)
-# SE.search(state=start_state)
-# print(SE.path)
-    
 
-# while True:
-#     command = input()
-#     a = 0
-#     b = 0 
-#     if command == 'u':
-#         a = 0
-#         b = -1
-#     elif command =='d':
-#         a = 0 
-#         b = 1
-#     elif command == 'l':
-#         a = -1
-#         b = 0
-#     elif command == 'r':
-#         a = 1
-#         b = 0
-#     elif command == 'q':
-#         break
-#     start_state.get_child(a,b)
-#     start_state.print_matrix()
-#     print(start_state.box)
-#     print(start_state.to_string())
 
 
 
