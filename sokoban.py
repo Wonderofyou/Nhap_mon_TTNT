@@ -329,7 +329,7 @@ start_state = StateSpace('levels_weight')
 # print(start_state.box)
 # print(start_state.to_string())
 moves = [(0,-1),(0,1),(-1,0),(1,0)] # L R U D
-SE = Search('DFS',state=start_state,moves=moves)
+SE = Search('BFS',state=start_state,moves=moves)
 
 
 total_weight,size, move_list, flag, node = SE.search() 
