@@ -22,196 +22,76 @@ class game:
         else:
             return False
 
-    def __init__(self,filename,level):
+    def __init__(self,level):
         self.queue = queue.LifoQueue()
-        self.matrix = []
-#        if level < 1 or level > 50:
-        if level < 1:
+        #if level < 1 or level > 50:
+        if level < 1 or level > 50:
             print("ERROR: Level "+str(level)+" is out of range")
             sys.exit(1)
         else:
-            file = open(filename,'r')
-            level_found = False
-            for line in file:
-                row = []
-                if not level_found:
-                    if  "Level "+str(level) == line.strip():
-                        level_found = True
-                else:
-                    if line.strip() != "":
-                        row = []
-                        for c in line:
-                            if c != '\n' and self.is_valid_value(c):
-                                row.append(c)
-                            elif c == '\n': #jump to next row when newline
-                                continue
-                            else:
-                                print("ERROR: Level "+str(level)+" has invalid value "+c)
-                                sys.exit(1)
-                        self.matrix.append(row)
-                    else:
-                        break
+            formatted_level = f"{level:02}"
+            self.start_state = StateSpace(f"input-{formatted_level}.txt")
+            
+            
 
     def load_size(self):
         x = 0
-        y = len(self.matrix)
-        for row in self.matrix:
+        y = len(self.start_state.get_matrix())
+        for row in self.start_state.get_matrix():
             if len(row) > x:
                 x = len(row)
         return (x * 32, y * 32)
+    
+    def load_move_from_file(self, output_file):
+        # Initialize the dictionary to store results
+        result = {'algorithm': [], 'path': [], 'instruction':[]}
 
-    def get_matrix(self):
-        return self.matrix
+        # Open and read the file
+        with open(output_file, 'r') as file:
+            # Initialize variables to keep track of current algorithm and path
+            current_algorithm = None
+            current_path = None
 
-    def print_matrix(self):
-        for row in self.matrix:
-            for char in row:
-                sys.stdout.write(char)
-                sys.stdout.flush()
-            sys.stdout.write('\n')
+            # Read through each line in the file
+            for line in file:
+                # Check if the line indicates a new algorithm
+                if line.startswith('BFS') or line.startswith('DFS') or line.startswith('A*') or line.startswith('UCS'):
+                    # Extract algorithm name and store it
+                    current_algorithm = line.split()[0]
+                    result['algorithm'].append(current_algorithm)
 
-    def get_content(self,x,y):
-        return self.matrix[x][y]
+                # Check if the line represents a path (assumes paths do not start with 'Steps')
+                elif not line.startswith('Steps') and current_algorithm:
+                    # Extract and store the path for the current algorithm
 
-    def set_content(self,x,y,content):
-        if self.is_valid_value(content):
-            self.matrix[x][y] = content
-        else:
-            print("ERROR: Value '"+content+"' to be added is not valid")
-
-    def worker(self):
-        for i,row in enumerate(self.matrix):
-            # print(row)
-            for j,pos in enumerate(row):
-                if pos == '@' or pos == '+':
-                    return (i, j, pos)
-
-    def can_move(self,x,y):
-        return self.get_content(self.worker()[0]+x,self.worker()[1]+y) not in ['#','*','$']
-
-    def next(self,x,y):
-        return self.get_content(self.worker()[0]+x,self.worker()[1]+y)
-
-    def can_push(self,x,y):
-        return (self.next(x,y) in ['*','$'] and self.next(x+x,y+y) in [' ','.'])
-
-    def is_completed(self):
-        for row in self.matrix:
-            for cell in row:
-                if cell == '$':
-                    return False
-        return True
-
-    def move_box(self,x,y,a,b):
-#        (x,y) -> move to do
-#        (a,b) -> box to move
-        current_box = self.get_content(x,y)
-        future_box = self.get_content(x+a,y+b)
-        if current_box == '$' and future_box == ' ':
-            self.set_content(x+a,y+b,'$')
-            self.set_content(x,y,' ')
-        elif current_box == '$' and future_box == '.':
-            self.set_content(x+a,y+b,'*')
-            self.set_content(x,y,' ')
-        elif current_box == '*' and future_box == ' ':
-            self.set_content(x+a,y+b,'$')
-            self.set_content(x,y,'.')
-        elif current_box == '*' and future_box == '.':
-            self.set_content(x+a,y+b,'*')
-            self.set_content(x,y,'.')
-
-    def unmove(self): 
-        if not self.queue.empty():
-            movement = self.queue.get()
-            print(movement)
-            if movement[2]:
-                current = self.worker()
-                self.move(movement[0] * -1,movement[1] * -1, False)
-                self.move_box(current[0]+movement[0],current[1]+movement[1],movement[0] * -1,movement[1] * -1)
-            else:
-                self.move(movement[0] * -1,movement[1] * -1, False)
-
-    def move(self,x,y,save):# move 
-        if self.can_move(x,y):
-            current = self.worker()
-            future = self.next(x,y)
-            if current[2] == '@' and future == ' ':
-                self.set_content(current[0]+x,current[1]+y,'@')
-                self.set_content(current[0],current[1],' ')
-                if save: 
-                     
-                    self.queue.put((x,y,False))
-            elif current[2] == '@' and future == '.': 
+                    current_path = line.strip()
+                    instruction = []
+                    for command in current_path:
+                        if command.lower() == 'l':
+                            instruction.append((0, -1))
+                        elif command.lower() == 'r':
+                            instruction.append((0, 1))
+                        elif command.lower() == 'u':
+                            instruction.append((-1, 0))
+                        elif command.lower() == 'd':
+                            instruction.append((1, 0))
                     
-                self.set_content(current[0]+x,current[1]+y,'+')
-                self.set_content(current[0],current[1],' ')
-                if save: 
-                     self.queue.put((x,y,False))
-            elif current[2] == '+' and future == ' ': 
-                    
-                self.set_content(current[0]+x,current[1]+y,'@')
-                self.set_content(current[0],current[1],'.')
-                if save: 
-                     self.queue.put((x,y,False))
-            elif current[2] == '+' and future == '.': 
-                    
-                self.set_content(current[0]+x,current[1]+y,'+')
-                self.set_content(current[0],current[1],'.')
-                if save: 
-                     self.queue.put((x,y,False))
-        elif self.can_push(x,y): 
-                    
-            current = self.worker()
-            future = self.next(x,y)
-            future_box = self.next(x+x,y+y)
-            if current[2] == '@' and future == '$' and future_box == ' ':
-                self.move_box(current[0]+x,current[1]+y,x,y)
-                self.set_content(current[0],current[1],' ')
-                self.set_content(current[0]+x,current[1]+y,'@')
-                if save: 
-                    self.queue.put((x,y,True))
-            elif current[2] == '@' and future == '$' and future_box == '.':
-                self.move_box(current[0]+x,current[1]+y,x,y)
-                self.set_content(current[0],current[1],' ')
-                self.set_content(current[0]+x,current[1]+y,'@')
-                if save:
-                    self.queue.put((x,y,True))
-            elif current[2] == '@' and future == '*' and future_box == ' ':
-                self.move_box(current[0]+x,current[1]+y,x,y)
-                self.set_content(current[0],current[1],' ')
-                self.set_content(current[0]+x,current[1]+y,'+')
-                if save: 
-                    self.queue.put((x,y,True))
-            elif current[2] == '@' and future == '*' and future_box == '.':
-                self.move_box(current[0]+x,current[1]+y,x,y)
-                self.set_content(current[0],current[1],' ')
-                self.set_content(current[0]+x,current[1]+y,'+')
-                if save: 
-                    self.queue.put((x,y,True))
-            if current[2] == '+' and future == '$' and future_box == ' ':
-                self.move_box(current[0]+x,current[1]+y,x,y)
-                self.set_content(current[0],current[1],'.')
-                self.set_content(current[0]+x,current[1]+y,'@')
-                if save: 
-                    self.queue.put((x,y,True))
-            elif current[2] == '+' and future == '$' and future_box == '.':
-                self.move_box(current[0]+x,current[1]+y,x,y)
-                self.set_content(current[0],current[1],'.')
-                self.set_content(current[0]+x,current[1]+y,'+')
-                if save: 
-                    self.queue.put((x,y,True))
-            elif current[2] == '+' and future == '*' and future_box == ' ':
-                self.move_box(current[0]+x,current[1]+y,x,y)
-                self.set_content(current[0],current[1],'.')
-                self.set_content(current[0]+x,current[1]+y,'+')
-                if save: 
-                    self.queue.put((x,y,True))
-            elif current[2] == '+' and future == '*' and future_box == '.':
-                self.move_box(current[0]+x,current[1]+y,x,y)
-                self.set_content(current[0],current[1],'.')
-                self.set_content(current[0]+x,current[1]+y,'+')
-                if save: 
-                    self.queue.put((x,y,True))
+                    result['path'].append(current_path)
+                    result['instruction'].append(instruction)
+
+        # Print the dictionary
+        return result
+#     def unmove(self): 
+#         if not self.queue.empty():
+#             movement = self.queue.get()
+#             if movement[2]:
+#                 current = self.worker()
+#                 self.move(movement[0] * -1,movement[1] * -1, False)
+#                 self.move_box(current[0]+movement[0],current[1]+movement[1],movement[0] * -1,movement[1] * -1)
+#             else:
+#                 self.move(movement[0] * -1,movement[1] * -1, False)
+
+
 
 def print_game(matrix,screen):
     screen.fill(background)
@@ -315,51 +195,50 @@ docker = pygame.image.load('images/dock.png')
 background = 255, 226, 191
 pygame.init()
 
-level = start_game()
-game = game('levels',level)
-
-size = game.load_size()
-screen = pygame.display.set_mode(size)
-step = 0 
-
-
-
-start_state = StateSpace('levels_weight')
-# start_state.print_matrix()
-# print(start_state.box)
-# print(start_state.to_string())
-moves = [(0,-1),(0,1),(-1,0),(1,0)] # L R U D
-SE = Search('BFS',state=start_state,moves=moves)
-
-
-total_weight,size, move_list, flag, node = SE.search() 
-index = 0 
-is_drawn = True  # Khởi tạo với True để bắt đầu di chuyển đầu tiên
 
 while True:
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            sys.exit(0)
+    # Chọn lại level khi trò chơi hoàn tất
+    
+    level = start_game()
+    game = game(level)
 
-    # Chỉ thực hiện di chuyển nếu lần cập nhật màn hình trước đó đã hoàn tất
-    if is_drawn and index < len(move_list):
-        dx, dy = move_list[index]
-        game.move(dx, dy, False)  # Thực hiện di chuyển
-        index += 1
-        is_drawn = False  # Đặt lại flag, chờ việc vẽ hoàn tất
+    size = game.load_size()
+    screen = pygame.display.set_mode(size)
 
-    # Cập nhật màn hình
-    print_game(game.get_matrix(), screen)
+
+    
+
+    print_game(game.start_state.get_matrix(), screen)
+    display_box(screen,"Computing...")
     pygame.display.update()
-    is_drawn = True  # Đặt lại flag sau khi cập nhật xong màn hình
 
-    # Kiểm tra xem game đã hoàn tất hay chưa
-    if game.is_completed():
-        print("end")
+
+    move_list = game.load_move_from_file('output-02.txt')['instruction'][1] #load move from file. If file is empty, change this code to get move list
+    index = 0 
+    is_drawn = True  # Khởi tạo với True để bắt đầu di chuyển đầu tiên
+        
+    while True:
+
+        # Chỉ thực hiện di chuyển nếu lần cập nhật màn hình trước đó đã hoàn tất
+        if is_drawn and index < len(move_list):
+            dx, dy = move_list[index]
+            game.start_state.get_child(dx, dy)  # Thực hiện di chuyển
+            index += 1
+            is_drawn = False  # Đặt lại flag, chờ việc vẽ hoàn tất
+
+        # Cập nhật màn hình
+        print_game(game.start_state.get_matrix(), screen)
         pygame.display.update()
-        time.sleep(3)  # Chờ 3 giây trước khi thoát
-        sys.exit(0)
-    pygame.time.delay(50)
- # Delay 100 ms giữa các bước di chuyển
+        is_drawn = True  # Đặt lại flag sau khi cập nhật xong màn hình
+
+        # Kiểm tra xem game đã hoàn tất hay chưa
+        if game.start_state.is_completed():
+            pygame.display.update()
+            display_end(screen=screen)
+            pygame.time.delay(1000)  # Đợi một lúc trước khi quay lại màn hình chọn
+            break  # Quay lại vòng lặp bên ngoài để chọn level mới
+
+        pygame.time.delay(50)
+
 
 
