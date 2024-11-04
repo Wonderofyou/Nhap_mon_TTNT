@@ -71,25 +71,20 @@ class game:
             sys.stdout.write('\n')
 
     def get_content(self,x,y):
-        return self.matrix[y][x]
+        return self.matrix[x][y]
 
     def set_content(self,x,y,content):
         if self.is_valid_value(content):
-            self.matrix[y][x] = content
+            self.matrix[x][y] = content
         else:
             print("ERROR: Value '"+content+"' to be added is not valid")
 
     def worker(self):
-        x = 0
-        y = 0
-        for row in self.matrix:
-            for pos in row:
+        for i,row in enumerate(self.matrix):
+            # print(row)
+            for j,pos in enumerate(row):
                 if pos == '@' or pos == '+':
-                    return (x, y, pos)
-                else:
-                    x = x + 1
-            y = y + 1
-            x = 0
+                    return (i, j, pos)
 
     def can_move(self,x,y):
         return self.get_content(self.worker()[0]+x,self.worker()[1]+y) not in ['#','*','$']
@@ -333,7 +328,7 @@ start_state = StateSpace('levels_weight')
 # start_state.print_matrix()
 # print(start_state.box)
 # print(start_state.to_string())
-moves = [(0,-1),(0,1),(-1,0),(1,0)]
+moves = [(0,-1),(0,1),(-1,0),(1,0)] # L R U D
 SE = Search('DFS',state=start_state,moves=moves)
 
 

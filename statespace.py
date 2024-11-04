@@ -35,7 +35,7 @@ class StateSpace:
                             if c != '\n' :
                                 row.append(c)
                                 if c=='*' or c =='$':
-                                    self.box.append([j,i])
+                                    self.box.append([i,j])
                             elif c == '\n': #jump to next row when newline
                                 continue
                             
@@ -65,22 +65,17 @@ class StateSpace:
             sys.stdout.write('\n')
 
     def get_content(self,x,y):
-        return self.matrix[y][x]
+        return self.matrix[x][y]
 
     def set_content(self,x,y,content):
-        self.matrix[y][x] = content
+        self.matrix[x][y] = content
 
     def worker(self):
-        x = 0
-        y = 0
-        for row in self.matrix:
-            for pos in row:
+        for i,row in enumerate(self.matrix):
+            # print(row)
+            for j,pos in enumerate(row):
                 if pos == '@' or pos == '+':
-                    return (x, y, pos)
-                else:
-                    x = x + 1
-            y = y + 1
-            x = 0
+                    return (i, j, pos)
 
     def can_move(self,x,y): #(0,1)(0,-1)
         return self.get_content(self.worker()[0]+x,self.worker()[1]+y) not in ['#','*','$']
@@ -266,27 +261,27 @@ def write_to_file(inputfile,outputfile, algorithms, moves = [(0,-1),(0,1),(-1,0)
             for (i,move) in enumerate(path) :
                 if move == (0,-1):
                     if flag[i]:
-                        path_str.append('D')
-                    elif flag[i] ==1:
-                        path_str.append('d')
-
-                elif move == (0,1):
-                    if flag[i] :
-                        path_str.append('U')
-                    elif flag[i] ==1:
-                        path_str.append('u')
-                
-                elif move == (-1,0):
-                    if flag[i]:
                         path_str.append('L')
                     elif flag[i] ==1:
                         path_str.append('l')
 
-                elif move == (1,0):
+                elif move == (0,1):
                     if flag[i] :
                         path_str.append('R')
-                    elif flag[i]:
+                    elif flag[i] ==1:
                         path_str.append('r')
+                
+                elif move == (-1,0):
+                    if flag[i]:
+                        path_str.append('U')
+                    elif flag[i] ==1:
+                        path_str.append('u')
+
+                elif move == (1,0):
+                    if flag[i] :
+                        path_str.append('D')
+                    elif flag[i]:
+                        path_str.append('d')
             path_str = "".join(path_str)
             print(len(path),total_weight)
             with open(outputfile,'w') as f:
@@ -294,8 +289,26 @@ def write_to_file(inputfile,outputfile, algorithms, moves = [(0,-1),(0,1),(-1,0)
                 f.write(f"Steps: {len(flag)}, Weight: {total_weight}, Node: {node}, Time (ms): {total_time}, Memory(MB): {size}\n")
                 f.write(path_str+'\n')
 
-write_to_file('levels_weight','output',['DFS'])
-                
+# write_to_file('levels_weight','output',['DFS'])
+
+# start_state = StateSpace('levels_weight')
+# start_state.print_matrix()
+# print(start_state.box)
+# print(start_state.worker())
+# while True :
+#     command = input()
+#     if command == 'l' :
+#         start_state.get_child(0,-1)
+#     if command == 'r':
+#         start_state.get_child(0,1)
+#     if command == 'u':
+#         start_state.get_child(-1,0)
+#     if command == 'd':
+#         start_state.get_child(1,0)
+#     if command == 'q':
+#         break
+#     start_state.print_matrix()  
+#     print(start_state.box)          
 
 
 
