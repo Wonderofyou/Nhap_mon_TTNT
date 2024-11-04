@@ -213,8 +213,7 @@ while True:
     pygame.display.update()
 
 
-    move_list = game.load_move_from_file('output-02.txt')['instruction'][0]
-    print(move_list)
+    move_list = game.load_move_from_file('output-02.txt')['instruction'][1]
     index = 0 
     is_drawn = True  # Khởi tạo với True để bắt đầu di chuyển đầu tiên
         

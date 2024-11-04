@@ -120,6 +120,9 @@ class StateSpace:
             self.set_content(x,y,'.')
             weight = self.set_box(x,y,x+a,y+b)
         return weight
+
+    def can_move_or_push(self,x,y):
+        return (self.can_move(x,y) or self.can_push(x,y))
     
 
     def get_child(self,x,y): #return (weight, push or not)
@@ -221,23 +224,24 @@ class Search:
                     return current_weight, size , path, flag, node
 
                 for move in self.moves:
-                    child = copy.deepcopy(current_state)
-                    res = child.get_child(move[0], move[1])
-                    node += 1
+                    if current_state.can_move_or_push(move[0], move[1]):
+                        child = copy.deepcopy(current_state)
+                        res = child.get_child(move[0], move[1])
+                        node += 1
 
-                    if res is not None:
-                        child_string = child.to_string()
+                        if res is not None:
+                            child_string = child.to_string()
 
-                        # Chỉ tiến hành nếu trạng thái chưa được thăm
-                        if child_string not in StateSpace.open_close_set:
-                            StateSpace.open_close_set.add(child_string)
+                            # Chỉ tiến hành nếu trạng thái chưa được thăm
+                            if child_string not in StateSpace.open_close_set:
+                                StateSpace.open_close_set.add(child_string)
 
-                            if child.is_completed():
-                                # Nếu trạng thái hoàn thành, không cần thêm vào ngăn xếp
-                                return current_weight+res[0], size , path + [move], flag + [res[1]], node
+                                if child.is_completed():
+                                    # Nếu trạng thái hoàn thành, không cần thêm vào ngăn xếp
+                                    return current_weight+res[0], size , path + [move], flag + [res[1]], node
 
-                            # Thêm trạng thái con vào ngăn xếp với trọng số
-                            stack.append((child, path + [move], current_weight+res[0], flag + [res[1]]))
+                                # Thêm trạng thái con vào ngăn xếp với trọng số
+                                stack.append((child, path + [move], current_weight+res[0], flag + [res[1]]))
 
 
             return 0, size , [], flag, node
@@ -255,24 +259,25 @@ class Search:
                     return current_weight, size , path, flag, node
 
                 for move in self.moves:
-                    child = copy.deepcopy(current_state)
-                    res = child.get_child(move[0], move[1])
-                    node += 1
+                    if current_state.can_move_or_push(move[0], move[1]):
+                        child = copy.deepcopy(current_state)
+                        res = child.get_child(move[0], move[1])
+                        node += 1
 
-                    if res is not None:
-                        child_weight = res[0]  # Weight of the child state
-                        child_string = child.to_string()
+                        if res is not None:
+                            child_weight = res[0]  # Weight of the child state
+                            child_string = child.to_string()
 
-                        # Only proceed if the state has not been visited
-                        if child_string not in StateSpace.open_close_set:
-                            StateSpace.open_close_set.add(child_string)
+                            # Only proceed if the state has not been visited
+                            if child_string not in StateSpace.open_close_set:
+                                StateSpace.open_close_set.add(child_string)
 
-                            if child.is_completed():
-                                # If the state is complete, return immediately without adding it to the queue
-                                return current_weight + res[0], size , path + [move], flag + [res[1]], node
+                                if child.is_completed():
+                                    # If the state is complete, return immediately without adding it to the queue
+                                    return current_weight + res[0], size , path + [move], flag + [res[1]], node
 
-                            # Add the child state to the queue with the accumulated weight
-                            queue.append((child, path + [move], current_weight + res[0], flag + [res[1]]))
+                                # Add the child state to the queue with the accumulated weight
+                                queue.append((child, path + [move], current_weight + res[0], flag + [res[1]]))
 
             return 0, size , [], flag, node
 
