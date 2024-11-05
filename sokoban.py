@@ -150,9 +150,10 @@ while True:
     size = game.load_size()
     screen = pygame.display.set_mode(size)
 
-    s = Search('UCS', game.start_state, moves)
+    s = Search('DFS', game.start_state, moves)
 
     weight, size , path, flag, node = s.search()
+    print(weight, size , path, flag, node)
 
     print_game(game.start_state.get_matrix(), screen, game.start_state.box)
     display_box(screen,"Computing...")
@@ -180,8 +181,8 @@ while True:
         # Kiểm tra xem game đã hoàn tất hay chưa
         if game.start_state.is_completed():
             pygame.display.update()
-            display_end(screen=screen)
-            pygame.time.delay(1000)  # Đợi một lúc trước khi quay lại màn hình chọn
+            # display_end(screen=screen)
+            # pygame.time.delay(1000)  # Đợi một lúc trước khi quay lại màn hình chọn
             break  # Quay lại vòng lặp bên ngoài để chọn level mới
 
         pygame.time.delay(50)
