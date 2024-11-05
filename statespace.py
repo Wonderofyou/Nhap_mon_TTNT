@@ -1,6 +1,8 @@
 import sys
 import copy
 from collections import deque
+import heapq
+import utils
 
 
 class StateSpace:
@@ -35,7 +37,7 @@ class StateSpace:
                             if c != '\n' :
                                 row.append(c)
                                 if c=='*' or c =='$':
-                                    self.box.append([j,i])
+                                    self.box.append([i,j])
                             elif c == '\n': #jump to next row when newline
                                 continue
                             
@@ -65,22 +67,17 @@ class StateSpace:
             sys.stdout.write('\n')
 
     def get_content(self,x,y):
-        return self.matrix[y][x]
+        return self.matrix[x][y]
 
     def set_content(self,x,y,content):
-        self.matrix[y][x] = content
+        self.matrix[x][y] = content
 
     def worker(self):
-        x = 0
-        y = 0
-        for row in self.matrix:
-            for pos in row:
+        for i,row in enumerate(self.matrix):
+            # print(row)
+            for j,pos in enumerate(row):
                 if pos == '@' or pos == '+':
-                    return (x, y, pos)
-                else:
-                    x = x + 1
-            y = y + 1
-            x = 0
+                    return (i, j, pos)
 
     def can_move(self,x,y): #(0,1)(0,-1)
         return self.get_content(self.worker()[0]+x,self.worker()[1]+y) not in ['#','*','$']
@@ -125,6 +122,9 @@ class StateSpace:
             self.set_content(x,y,'.')
             weight = self.set_box(x,y,x+a,y+b)
         return weight
+
+    def can_move_or_push(self,x,y):
+        return (self.can_move(x,y) or self.can_push(x,y))
     
 
     def get_child(self,x,y): #return (weight, push or not)
@@ -192,110 +192,68 @@ class StateSpace:
             return (weight,True)     
         return None
 
-import sys
-from collections import deque
-import copy
-
-class Search:
-    def __init__(self, search_alg, state, moves):
-        self.search_alg = search_alg
-        self.start = state
-        self.moves = moves  
-
-    from collections import deque
-import sys
-import copy
-
-class Search:
-    def __init__(self, search_alg, state, moves):
-        self.search_alg = search_alg
-        self.start = state
-        self.moves = moves  
-
-    def search(self):
-        if self.search_alg == 'DFS':
-            stack = deque([(self.start, [], 0, [])])  # Stack holds tuples of (state, path, weight, flag)
-            StateSpace.open_close_set.add(self.start.to_string())
-            node = 1
-            size = sys.getsizeof(self.start)
-
-            while stack:
-                current_state, path, current_weight, flag = stack.pop()
-
-                if current_state.is_completed():
-                    return current_weight, size / (1024 * 1024), path, flag, node
-
-                for move in self.moves:
-                    child = copy.deepcopy(current_state)
-                    res = child.get_child(move[0], move[1])
-                    node += 1
-
-                    if res is not None:
-                        child_weight = res[0]  # Trọng số của trạng thái co
-                        child_string = child.to_string()
-
-                        # Chỉ tiến hành nếu trạng thái chưa được thăm
-                        if child_string not in StateSpace.open_close_set:
-                            StateSpace.open_close_set.add(child_string)
-
-                            if child.is_completed():
-                                # Nếu trạng thái hoàn thành, không cần thêm vào ngăn xếp
-                                return current_weight+res[0], size / (1024 * 1024), path + [move], flag + [res[1]], node
-
-                            # Thêm trạng thái con vào ngăn xếp với trọng số
-                            stack.append((child, path + [move], current_weight+res[0], flag + [res[1]]))
-
-
-            return 0, size / (1024 * 1024), [], flag, node
-
-
-
 
 import os              
 import time
-def write_to_file(inputfile,outputfile, algorithms, moves = [(0,-1),(0,1),(-1,0),(1,0)]):
-    if not os.path.exists(outputfile):
-        start_state = StateSpace(filename=inputfile)
-        for algorithm in algorithms :
-            search_engine = Search(search_alg=algorithm,state=start_state,moves=moves )
-            start_time = time.time()
-            total_weight,size, path, flag, node  =  search_engine.search()
-            end_time = time.time()
-            total_time = 1000*(end_time-start_time)
-            path_str = []
-            for (i,move) in enumerate(path) :
-                if move == (0,-1):
-                    if flag[i]:
-                        path_str.append('D')
-                    elif flag[i] ==1:
-                        path_str.append('d')
 
-                elif move == (0,1):
-                    if flag[i] :
-                        path_str.append('U')
-                    elif flag[i] ==1:
-                        path_str.append('u')
+def write_to_file(inputfile, outputfile, algorithms, moves=[(0, -1), (0, 1), (-1, 0), (1, 0)]):
+    start_state = StateSpace(filename=inputfile)
+    
+    # Clear previous content if needed
+    with open(outputfile, 'w') as f:
+        pass  # Just open in write mode to clear content
+    
+    for algorithm in algorithms:
+        StateSpace.open_close_set.clear()
+        search_engine = Search(search_alg=algorithm, state=start_state, moves=moves)
+        start_time = time.time()
+        total_weight, size, path, flag, node = search_engine.search()
+        end_time = time.time()
+        total_time = 1000 * (end_time - start_time)
+        
+        path_str = []
+        for (i, move) in enumerate(path):
+            if move == (0, -1):
+                path_str.append('L' if flag[i] else 'l')
+            elif move == (0, 1):
+                path_str.append('R' if flag[i] else 'r')
+            elif move == (-1, 0):
+                path_str.append('U' if flag[i] else 'u')
+            elif move == (1, 0):
+                path_str.append('D' if flag[i] else 'd')
                 
-                elif move == (-1,0):
-                    if flag[i]:
-                        path_str.append('L')
-                    elif flag[i] ==1:
-                        path_str.append('l')
+        path_str = "".join(path_str)
+        print(len(path), total_weight)
+        
+        # Append results to output file
+        with open(outputfile, 'a') as f:
+            f.write(algorithm + '\n')
+            f.write(f"Steps: {len(flag)}, Weight: {total_weight}, Node: {node}, Time (ms): {total_time}, Memory(MB): {size}\n")
+            f.write(path_str + '\n')
 
-                elif move == (1,0):
-                    if flag[i] :
-                        path_str.append('R')
-                    elif flag[i]:
-                        path_str.append('r')
-            path_str = "".join(path_str)
-            print(len(path),total_weight)
-            with open(outputfile,'w') as f:
-                f.write(algorithm+'\n')
-                f.write(f"Steps: {len(flag)}, Weight: {total_weight}, Node: {node}, Time (ms): {total_time}, Memory(MB): {size}\n")
-                f.write(path_str+'\n')
+# write_to_file('input-02.txt', 'output-02.txt', ['BFS', 'DFS'])  #un comment to write path to file, should add A* and UCS in the array
 
-write_to_file('levels_weight','output',['DFS'])
-                
+
+
+#Uncomment to play game in command line
+# start_state = StateSpace('levels_weight')
+# start_state.print_matrix()
+# print(start_state.box)
+# print(start_state.worker())
+# while True :
+#     command = input()
+#     if command == 'l' :
+#         start_state.get_child(0,-1)
+#     if command == 'r':
+#         start_state.get_child(0,1)
+#     if command == 'u':
+#         start_state.get_child(-1,0)
+#     if command == 'd':
+#         start_state.get_child(1,0)
+#     if command == 'q':
+#         break
+#     start_state.print_matrix()  
+#     print(start_state.box)          
 
 
 
