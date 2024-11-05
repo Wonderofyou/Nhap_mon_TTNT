@@ -222,7 +222,6 @@ class Search:
     
     
     def calculate_heuristic(self,state):
-        # Lấy vị trí các target
         targets = self.get_targets(state)
         
         # Tạo ma trận chi phí từ mỗi box đến mỗi target
@@ -399,16 +398,7 @@ class Search:
             
             
 
-# cần xây a* cần chọn thằng heuristic, chọn theo admissive hay consistent, theo admissive tức là h(n) < real_cost, h(n) là khoảng cách đến goal gần nhất của nó ? 
-
-#xây heurisitc là khoảng cách từ ô đó đến goal nào ? goal gần nhất hay goal gần nhất trống
-
-#Định nghĩa lại hàm chi phí cost = weight tại thời điểm đó thôi là đủ 
-
-#mỗi trạng thái nên có 1 ID và cái ID này chính là cái state mà nó encode dựa vào cái này để biết là nó có chưa, đồng thời cost của mỗi thằng
-# cost của mỗi trạng thái sẽ là parent.cost + weight của box mà mình di chuyển và mỗi trạng thái nếu mà nó nhỏ hơn thì mới xét còn không thì vứt
-
-# Xây dựng hàm heuristic như thế nào ? Hàm heuristic xây dựng được nên là 1 là admissive hai alf  
+ 
 
 
 import os              
