@@ -1,8 +1,10 @@
 #!../bin/python
-
+import threading
 import sys
 import pygame
-
+import os
+from events import *
+from widgets import sidebar_widgets
 from statespace import StateSpace
 from search import Search
 from game import game
@@ -121,8 +123,8 @@ def ask(screen, question):
     display_box(screen, question + ": " + "".join(current_string))
   return "".join(current_string)
 
-def start_game():
-    start = pygame.display.set_mode((320,240))
+def start_game(start):
+    #start = pygame.display.set_mode((320,240))
     level = int(ask(start,"Select Level"))
     if level > 0:
         return level
@@ -140,22 +142,63 @@ docker = pygame.image.load('images/dock.png')
 background = 255, 226, 191
 pygame.init()
 moves = [(0, 1), (0, -1), (1, 0), (-1, 0)]
+def choose_algo(screen, btns):
+    w = 1055
+    h1 = 100
+    x0 = 130
+    y0 = 40
+    waiting_option = True
+    options = ['A*', 'BFS', 'DFS', 'UCS']
+    while waiting_option:
+        for event in pygame.event.get():
+          if event.type == pygame.QUIT:
+            waiting_option = False   
+          if event.type == pygame.MOUSEBUTTONDOWN:
+             x, y = event.pos
+             if x >= w and x <= w + x0:
+                for i, (btn) in enumerate(btns):
+                   if y >= h1 + h1*i and y <= h1 + h1*i + y0:
+                      return options[i]
+             
+        print_game(game.start_state.get_matrix(), screen, game.start_state.box)
+        for btn in btns:
+            btn.draw()
+        pygame.display.flip()
+    return 'BFS'
+def rerender_running(screen, message_box, btns):
+  while not stop_event.is_set():
+    print_game(game.start_state.get_matrix(), screen, game.start_state.box)
+    for btn in btns:
+       btn.draw()
+    display_box(screen, message_box)
+
+os.environ['SDL_VIDEO_WINDOW_POS'] = "100,100"
+
 
 while True:
     # Chọn lại level khi trò chơi hoàn tất
-    
-    level = start_game()
+    screen = pygame.display.set_mode((1216, 640))
+    btns = sidebar_widgets(screen)
+    level = start_game(screen)
     game = game(level)
 
     size = game.load_size()
     screen = pygame.display.set_mode(size)
+    stop_event = threading.Event()
+    option = choose_algo(screen=screen, btns=btns)
+    print("Algorithm:", option)
+    s = Search(option, game.start_state, moves)
+         
 
-    s = Search('UCS', game.start_state, moves)
-
+    # Đa luồng để khi nó chạy cái search thì màn hình luôn được render lại
+    thread_render = threading.Thread(target=rerender_running, args=(screen, "Computing...", btns,  ))
+    thread_render.start()
     weight, size , path, flag, node = s.search()
-
+    stop_event.set()
+    thread_render.join()
+    
     print_game(game.start_state.get_matrix(), screen, game.start_state.box)
-    display_box(screen,"Computing...")
+    
     pygame.display.update()
 
 

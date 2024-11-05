@@ -111,7 +111,7 @@ class Search:
                                     return current_weight + res[0], size, path + [move], flag + [res[1]], node
 
                                 # Add the child state to the heap with the accumulated weight
-                                print(node, cost, move[0]*0.5 + move[1], move[0], move[1])
+                                # print(node, cost, move[0]*0.5 + move[1], move[0], move[1])
                                 heapq.heappush(heap_states, (cost, child_string, child, path + [move], current_weight + res[0], flag + [res[1]]))
             return 0, size , [], flag, node
         # (0, 1) (0, -1), (1, 0), (-1, 0)
@@ -146,7 +146,7 @@ class Search:
                                     return current_weight + res[0], size, path + [move], flag + [res[1]], node
 
                                 # Add the child state to the heap with the accumulated weight
-                                print(node, cost, move[0]*0.5 + move[1], move[0], move[1])
+                                # print(node, cost, move[0]*0.5 + move[1], move[0], move[1])
                                 heapq.heappush(heap_states, (cost, child_string, child, path + [move], current_weight + res[0], flag + [res[1]]))
             return 0, size , [], flag, node
 
