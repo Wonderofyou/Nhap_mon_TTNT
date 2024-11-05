@@ -56,30 +56,27 @@ class Search:
             StateSpace.open_close_set.add(self.start.to_string())
             node = 1
             size = sys.getsizeof(self.start)
-
             while queue:
                 current_state, path, current_weight, flag = queue.popleft()  # Pop from the front of the queue
-
                 if current_state.is_completed():
-                    return current_weight, size/(1024**2) , path, flag, node
-
+                    return current_weight, size / (1024**2), path, flag, node
                 for move in self.moves:
                     if current_state.can_move_or_push(move[0], move[1]):
                         child = copy.deepcopy(current_state)
                         res = child.get_child(move[0], move[1])
                         node += 1
-                        size+= sys.getsizeof(self.start)
-                        child_string = child.to_string()
-
-                        # Only proceed if the state has not been visited
-                        if child_string not in StateSpace.open_close_set:
-                            StateSpace.open_close_set.add(child_string)
-
-                            if child.is_completed():
-                                # If the state is complete, return immediately without adding it to the queue
-                                return current_weight + res[0], size/(1024**2) , path + [move], flag + [res[1]], node
-                        # Add the child state to the queue with the accumulated weight
-                        queue.append((child, path + [move], current_weight + res[0], flag + [res[1]]))
+                        size+=sys.getsizeof(current_state)
+                        if res is not None:
+                            child_string = child.to_string()
+                            # Only proceed if the state has not been visited
+                            if child_string not in StateSpace.open_close_set:
+                                StateSpace.open_close_set.add(child_string)
+                                if child.is_completed():
+                                    # If the state is complete, return immediately without adding it to the queue
+                                    return current_weight + res[0], size / (1024**2), path + [move], flag + [res[1]], node
+                                # Add the child state to the queue with the accumulated weight
+                                queue.append((child, path + [move], current_weight + res[0], flag + [res[1]]))
+            return 0, size / (1024**2), [], flag, node
 
             return 0, size/(1024**2) , [], flag, node
         elif self.search_alg == "UCS":

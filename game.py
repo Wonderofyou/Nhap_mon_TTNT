@@ -5,6 +5,7 @@ import queue
 from statespace import StateSpace
 
 class game:
+    scale = 64
 
     def is_valid_value(self,char):
         if (char == ' ' or #floor
@@ -36,7 +37,7 @@ class game:
         for row in self.start_state.get_matrix():
             if len(row) > x:
                 x = len(row)
-        return (x * 32, y * 32)
+        return (x * game.scale, y * game.scale)
     
     def load_move_from_file(self, output_file):
         # Initialize the dictionary to store results
