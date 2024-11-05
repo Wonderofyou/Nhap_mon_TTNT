@@ -34,12 +34,16 @@ def min_weighted_distance(stones, switches, weights):
   
 def get_first_two_elements(arrays):
     return [array[:2] for array in arrays]
+<<<<<<< HEAD
 
+=======
+>>>>>>> 9876863e0b981fa2360546ab4dc2410c6f8e5aac
 def cost_g(switches, stones, weights):
     stones_postions = get_first_two_elements(stones)
     return min_weighted_distance(stones_postions, switches, weights)
 
 
+<<<<<<< HEAD
 
 
 def get_manhattan_distance(point1, point2):
@@ -62,3 +66,5 @@ def calculate_heuristic(stones, switches):
         min_weighted_distance = cost_matrix[stone_indices, switch_indices].sum()
     
         return min_weighted_distance  
+=======
+>>>>>>> 9876863e0b981fa2360546ab4dc2410c6f8e5aac
