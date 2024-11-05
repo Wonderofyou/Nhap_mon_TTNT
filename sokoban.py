@@ -211,7 +211,7 @@ while True:
     print_game(game.start_state.get_matrix(), screen)
     display_box(screen,"Computing...")
     pygame.display.update()
-
+    
 
     move_list = game.load_move_from_file('output-02.txt')['instruction'][1] #load move from file. If file is empty, change this code to get move list
     index = 0 
