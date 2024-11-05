@@ -1,7 +1,6 @@
-<<<<<<< HEAD
+
 import utils
-=======
->>>>>>> 9876863e0b981fa2360546ab4dc2410c6f8e5aac
+
 from statespace import StateSpace
 import sys
 from collections import deque
@@ -81,80 +80,40 @@ class Search:
                             queue.append((child, path + [move], current_weight + res[0], flag + [res[1]]))
 
             return 0, size , [], flag, node
-<<<<<<< HEAD
         elif self.search_alg == "UCS":
-            heap_states = [(0, self.start.to_string(), self.start, [], 0, [])] # heap holds the same things above, first element is priority level
+            heap_states = [(0, "", self.start, [], 0, [])] # heap holds the same things above, first element is priority level
             StateSpace.open_close_set.add(self.start.to_string())
             node = 1
-            switches = utils.get_positions(self.start.matrix)
             size = sys.getsizeof(self.start)
             while heap_states:
                 cost, child_string, current_state, path, current_weight, flag = heapq.heappop(heap_states)
-                print(cost)
                 if current_state.is_completed():
-                    return current_weight, size / (1024 * 1024), path, flag, node
+                    return current_weight, size, path, flag, node
                 for move in self.moves:
-                    child = copy.deepcopy(current_state)
-                    res = child.get_child(move[0], move[1])
-                    cost = utils.cost_g(switches, child.box, child.weights)
-                    node += 1
+                    if current_state.can_move_or_push(move[0], move[1]):
+                        child = copy.deepcopy(current_state)
+                        res = child.get_child(move[0], move[1])
+                        if res is not None:
+                            if res[1]:
+                                cost += (1 + res[0])
+                            else:
+                                cost += 1
+                            node += 1
+                            child_weight = res[0]  # Weight of the child state
+                            child_string = child.to_string()
 
-                    if res is not None:
-                        child_weight = res[0]  # Weight of the child state
-                        child_string = child.to_string()
+                            # Only proceed if the state has not been visited
+                            if child_string not in StateSpace.open_close_set:
+                                StateSpace.open_close_set.add(child_string)
 
-                        # Only proceed if the state has not been visited
-                        if child_string not in StateSpace.open_close_set:
-                            StateSpace.open_close_set.add(child_string)
+                                if child.is_completed():
+                                    # If the state is complete, return immediately without adding it to the queue
+                                    return current_weight + res[0], size, path + [move], flag + [res[1]], node
 
-                            if child.is_completed():
-                                # If the state is complete, return immediately without adding it to the queue
-                                return current_weight + res[0], size / (1024 * 1024), path + [move], flag + [res[1]], node
-
-                            # Add the child state to the heap with the accumulated weight
-                            heapq.heappush(heap_states, (cost, child.to_string(), child, path + [move], current_weight + res[0], flag + [res[1]]))
+                                # Add the child state to the heap with the accumulated weight
+                                print(node, cost, move[0]*0.5 + move[1], move[0], move[1])
+                                heapq.heappush(heap_states, (cost, child_string, child, path + [move], current_weight + res[0], flag + [res[1]]))
             return 0, size , [], flag, node
-        
-        elif self.search_alg == 'AStar':
-            pq = PriorityQueue()
-            counter = 0
-            initial_h = 0
-            pq.put((initial_h, 0, counter, self.start, [], []))
-            counter += 1
-            StateSpace.open_close_set.add(self.start.to_string())
-            node = 1
-            switches = utils.get_positions(self.start.matrix)
-            size = sys.getsizeof(self.start)
-            while not pq.empty():
-                f_score, current_weight, _, current_state, path, flag = pq.get()
-        
-                if current_state.is_completed():
-                    return current_weight, size / (1024 * 1024), path, flag, node
-            
-                for move in self.moves:
-                    child = copy.deepcopy(current_state)
-                    res = child.get_child(move[0], move[1])
-                    node += 1
-            
-                    if res is not None:
-                        child_string = child.to_string()
-                
-                        if child_string not in StateSpace.open_close_set:
-                            StateSpace.open_close_set.add(child_string)
-                    
-                            if child.is_completed():
-                                return current_weight + res[0], size / (1024 * 1024), path + [move], flag + [res[1]], node
-                    
-                            # Tính f_score mới = g(n) + h(n)
-                            g_score = current_weight + res[0]  # Chi phí thực tế từ start đến node hiện tại
-                            h_score = utils.calculate_heuristic(child.box,switches)  # Ước lượng chi phí từ node hiện tại đến goal
-                            f_score = g_score + h_score
-                    
-                            pq.put((f_score, g_score, counter, child, path + [move], flag + [res[1]]))
-                            counter += 1
-                    
-            return 0, size / (1024 * 1024), [], flag, node
-=======
         # (0, 1) (0, -1), (1, 0), (-1, 0)
         elif self.search_alg == "UCS":
             heap_states = [(0, "", self.start, [], 0, [])] # heap holds the same things above, first element is priority level
@@ -190,4 +149,4 @@ class Search:
                                 print(node, cost, move[0]*0.5 + move[1], move[0], move[1])
                                 heapq.heappush(heap_states, (cost, child_string, child, path + [move], current_weight + res[0], flag + [res[1]]))
             return 0, size , [], flag, node
->>>>>>> 9876863e0b981fa2360546ab4dc2410c6f8e5aac
+

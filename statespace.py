@@ -1,13 +1,5 @@
 import sys
-<<<<<<< HEAD
-import copy
-from collections import deque
-import heapq
-import utils
 
-
-=======
->>>>>>> 9876863e0b981fa2360546ab4dc2410c6f8e5aac
 class StateSpace:
     open_close_set = set()
 
