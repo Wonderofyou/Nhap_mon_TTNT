@@ -154,7 +154,7 @@ while True:
     size = game.load_size()
     screen = pygame.display.set_mode(size)
 
-    s = Search('UCS', game.start_state, moves)
+    s = Search('AStar', game.start_state, moves)
 
     weight, size , path, flag, node = s.search()
 
