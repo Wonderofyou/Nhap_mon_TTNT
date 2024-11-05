@@ -2,12 +2,10 @@
 
 import sys
 import pygame
-import time
-import copy
-import queue
 
 from statespace import StateSpace
 from search import Search
+from game import game
 
 
 
@@ -32,9 +30,7 @@ def draw_weight_on_box(number, x, y, image):
 
 def print_game(matrix,screen, boxes=None):
     positions = [x[:2] for x in boxes]  # Lấy 2 phần tử đầu của mỗi phần tử trong a
-    print(positions)
     weights = [x[-1] for x in boxes]
-    print(weights)
     screen.fill(background)
     x = 0
     y = 0
@@ -143,7 +139,7 @@ worker_docked = pygame.image.load('images/worker_dock.png')
 docker = pygame.image.load('images/dock.png')
 background = 255, 226, 191
 pygame.init()
-
+moves = [(0, 1), (0, -1), (1, 0), (-1, 0)]
 
 while True:
     # Chọn lại level khi trò chơi hoàn tất
@@ -154,15 +150,16 @@ while True:
     size = game.load_size()
     screen = pygame.display.set_mode(size)
 
+    s = Search('UCS', game.start_state, moves)
 
-    
+    weight, size , path, flag, node = s.search()
 
     print_game(game.start_state.get_matrix(), screen, game.start_state.box)
     display_box(screen,"Computing...")
     pygame.display.update()
 
 
-    move_list = game.load_move_from_file('output-02.txt')['instruction'][1] #load move from file. If file is empty, change this code to get move list
+    move_list = path #load move from file. If file is empty, change this code to get move list
     index = 0 
     is_drawn = True  # Khởi tạo với True để bắt đầu di chuyển đầu tiên
         
