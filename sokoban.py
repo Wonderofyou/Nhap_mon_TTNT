@@ -150,7 +150,7 @@ while True:
     size = game.load_size()
     screen = pygame.display.set_mode(size)
 
-    s = Search('DFS', game.start_state, moves)
+    s = Search('DFS', game.start_state, moves)#choose alg here
 
     weight, size , path, flag, node = s.search()
     print(weight, size , path, flag, node)
