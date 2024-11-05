@@ -44,6 +44,7 @@ class StateSpace:
 
     def get_matrix(self):
         return self.matrix
+    
     def to_string(self):#encoding a State to string 
         s = []
         for row in self.get_matrix():
@@ -188,43 +189,45 @@ class StateSpace:
         return None
 
 
+
+
 import os              
 import time
 
 def write_to_file(inputfile, outputfile, algorithms, moves=[(0, -1), (0, 1), (-1, 0), (1, 0)]):
-    start_state = StateSpace(filename=inputfile)
-    
-    # Clear previous content if needed
-    with open(outputfile, 'w') as f:
-        pass  # Just open in write mode to clear content
-    
-    for algorithm in algorithms:
-        StateSpace.open_close_set.clear()
-        search_engine = Search(search_alg=algorithm, state=start_state, moves=moves)
-        start_time = time.time()
-        total_weight, size, path, flag, node = search_engine.search()
-        end_time = time.time()
-        total_time = 1000 * (end_time - start_time)
+        start_state = StateSpace(filename=inputfile)
         
-        path_str = []
-        for (i, move) in enumerate(path):
-            if move == (0, -1):
-                path_str.append('L' if flag[i] else 'l')
-            elif move == (0, 1):
-                path_str.append('R' if flag[i] else 'r')
-            elif move == (-1, 0):
-                path_str.append('U' if flag[i] else 'u')
-            elif move == (1, 0):
-                path_str.append('D' if flag[i] else 'd')
-                
-        path_str = "".join(path_str)
-        print(len(path), total_weight)
+        # Clear previous content if needed
+        with open(outputfile, 'w') as f:
+            pass  # Just open in write mode to clear content
         
-        # Append results to output file
-        with open(outputfile, 'a') as f:
-            f.write(algorithm + '\n')
-            f.write(f"Steps: {len(flag)}, Weight: {total_weight}, Node: {node}, Time (ms): {total_time}, Memory(MB): {size}\n")
-            f.write(path_str + '\n')
+        for algorithm in algorithms:
+            StateSpace.open_close_set.clear()
+            search_engine = Search(search_alg=algorithm, state=start_state, moves=moves)
+            start_time = time.time()
+            total_weight, size, path, flag, node = search_engine.search()
+            end_time = time.time()
+            total_time = 1000 * (end_time - start_time)
+            
+            path_str = []
+            for (i, move) in enumerate(path):
+                if move == (0, -1):
+                    path_str.append('L' if flag[i] else 'l')
+                elif move == (0, 1):
+                    path_str.append('R' if flag[i] else 'r')
+                elif move == (-1, 0):
+                    path_str.append('U' if flag[i] else 'u')
+                elif move == (1, 0):
+                    path_str.append('D' if flag[i] else 'd')
+                    
+            path_str = "".join(path_str)
+            print(len(path), total_weight)
+            
+            # Append results to output file
+            with open(outputfile, 'a') as f:
+                f.write(algorithm + '\n')
+                f.write(f"Steps: {len(flag)}, Weight: {total_weight}, Node: {node}, Time (ms): {total_time}, Memory(MB): {size}\n")
+                f.write(path_str + '\n')
 
 # write_to_file('input-02.txt', 'output-02.txt', ['BFS', 'DFS'])  #un comment to write path to file, should add A* and UCS in the array
 
