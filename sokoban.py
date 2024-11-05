@@ -25,7 +25,7 @@ class game:
     def __init__(self,level):
         self.queue = queue.LifoQueue()
         #if level < 1 or level > 50:
-        if level < 1 or level > 50:
+        if level < 1:
             print("ERROR: Level "+str(level)+" is out of range")
             sys.exit(1)
         else:
@@ -92,13 +92,34 @@ class game:
 #                 self.move(movement[0] * -1,movement[1] * -1, False)
 
 
+def draw_number_on_rock(number, x, y, image):
+    screen.blit(image, (x, y))  # Vẽ hình ảnh đá
+    width, height = image.get_size()
+    # Tạo phông chữ và render số
+    font = pygame.font.SysFont(None, 18)  # Cỡ chữ nhỏ hơn cho phù hợp (18)
+    text_surface = font.render(str(number), True, (0, 0, 0))  # Màu đen cho số
 
-def print_game(matrix,screen):
+    # Tính toán vị trí để số nằm giữa hình tròn
+    circle_x, circle_y = x + width // 2, y + height // 2
+    text_rect = text_surface.get_rect(center=(circle_x, circle_y))
+
+    # Vẽ hình tròn trắng làm nền cho số
+    pygame.draw.circle(screen, (255, 255, 255), (circle_x, circle_y), 12)
+    pygame.draw.circle(screen, (0, 0, 0), (circle_x, circle_y), 12, 2)  # Viền đen xung quanh
+
+    # Vẽ số lên hình tròn
+    screen.blit(text_surface, text_rect)
+
+def print_game(matrix,screen, boxes=None):
+    positions = [x[:2] for x in boxes]  # Lấy 2 phần tử đầu của mỗi phần tử trong a
+    print(positions)
+    weights = [x[-1] for x in boxes]
+    print(weights)
     screen.fill(background)
     x = 0
     y = 0
-    for row in matrix:
-        for char in row:
+    for i, (row) in enumerate(matrix):
+        for j, (char) in enumerate(row):
             if char == ' ': #floor
                 screen.blit(floor,(x,y))
             elif char == '#': #wall
@@ -108,9 +129,17 @@ def print_game(matrix,screen):
             elif char == '.': #dock
                 screen.blit(docker,(x,y))
             elif char == '*': #box on dock
-                screen.blit(box_docked,(x,y))
+                for k in range(0, len(positions)):
+                    if i==positions[k][0] and j==positions[k][1]:
+                        draw_number_on_rock(weights[k], x, y, box_docked)
             elif char == '$': #box
-                screen.blit(box,(x,y))
+                for k in range(0, len(positions)):
+                    if i==positions[k][0] and j==positions[k][1]:
+                        draw_number_on_rock(weights[k], x, y, box)
+            # elif char == '*': #box on dock
+            #     screen.blit(box_docked, (x, y))
+            # elif char == '$': #box
+            #     screen.blit(box, (x, y))
             elif char == '+': #worker on dock
                 screen.blit(worker_docked,(x,y))
             x = x + 32
@@ -208,7 +237,7 @@ while True:
 
     
 
-    print_game(game.start_state.get_matrix(), screen)
+    print_game(game.start_state.get_matrix(), screen, game.start_state.box)
     display_box(screen,"Computing...")
     pygame.display.update()
 
@@ -227,7 +256,7 @@ while True:
             is_drawn = False  # Đặt lại flag, chờ việc vẽ hoàn tất
 
         # Cập nhật màn hình
-        print_game(game.start_state.get_matrix(), screen)
+        print_game(game.start_state.get_matrix(), screen, game.start_state.box)
         pygame.display.update()
         is_drawn = True  # Đặt lại flag sau khi cập nhật xong màn hình
 
