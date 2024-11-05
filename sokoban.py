@@ -172,7 +172,6 @@ docker = pygame.transform.scale(pygame.image.load('images/dock.png'), (64, 64))
 background = 255, 226, 191
 pygame.init()
 moves = [(0, 1), (0, -1), (1, 0), (-1, 0)]# LRUD
-# moves = [(1,0),(-1,0),(0,1),(0,-1)]
 
 while True:
     # Chọn lại level khi trò chơi hoàn tất

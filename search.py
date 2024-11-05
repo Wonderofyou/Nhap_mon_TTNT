@@ -77,8 +77,7 @@ class Search:
                                 # Add the child state to the queue with the accumulated weight
                                 queue.append((child, path + [move], current_weight + res[0], flag + [res[1]]))
             return 0, size / (1024**2), [], flag, node
-
-            return 0, size/(1024**2) , [], flag, node
+        
         elif self.search_alg == "UCS":
             heap_states = [(0, "", self.start, [], 0, [])] # heap holds the same things above, first element is priority level
             StateSpace.open_close_set.add(self.start.to_string())
