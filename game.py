@@ -7,7 +7,7 @@ from statespace import StateSpace
 class game:
 
     def is_valid_value(self,char):
-        if ( char == ' ' or #floor
+        if (char == ' ' or #floor
             char == '#' or #wall
             char == '@' or #worker on floor
             char == '.' or #dock
