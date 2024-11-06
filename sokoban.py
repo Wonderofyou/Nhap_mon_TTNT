@@ -30,7 +30,7 @@ def draw_weight_on_box(number, x, y, image):
     # Vẽ số lên hình tròn
     screen.blit(text_surface, text_rect)
 def draw_pause_btn(screen, on_pause):
-    button_x, button_y, button_width, button_height = 1000, 500, 180, 40
+    button_x, button_y, button_width, button_height = 1000, 350, 180, 40
     radius = 5
     border_thickness = 2
     font = pygame.font.SysFont('Verdana', 14, bold=True)
@@ -44,19 +44,16 @@ def draw_pause_btn(screen, on_pause):
     else:
       color = (150, 150, 150)
 
-    # Vẽ viền
     pygame.draw.rect(screen, (0, 0, 0), button_rect, border_radius=radius)
 
-    # Vẽ button bên trong
     inner_rect = button_rect.inflate(-border_thickness*2, -border_thickness*2)
     pygame.draw.rect(screen, color, inner_rect, border_radius=radius)
 
-    # Vẽ văn bản
     screen.blit(button_text, (button_x + (button_width - button_text.get_width()) // 2,
                               button_y + (button_height - button_text.get_height()) // 2))
     return button_x, button_y, button_width, button_height
    
-def print_game(matrix,screen, step, total_weight, on_pause, boxes=None):
+def print_game(matrix,screen, step, total_weight, on_pause=None, boxes=None):
     positions = [x[:2] for x in boxes]  # Lấy 2 phần tử đầu của mỗi phần tử trong a
     weights = [x[-1] for x in boxes]
     screen.fill(background)
@@ -65,7 +62,8 @@ def print_game(matrix,screen, step, total_weight, on_pause, boxes=None):
     font = pygame.font.Font(None, 36)
     steps_text = font.render(f"Steps: {step}", True, (0, 0, 0))
     weight_text = font.render(f"Weight: {total_weight}", True, (0, 0, 0))
-    draw_pause_btn(screen, on_pause)
+    if on_pause is not None:
+       draw_pause_btn(screen, on_pause)
     
     screen.blit(steps_text, (900, 50))
     screen.blit(weight_text, (900, 100))
@@ -87,10 +85,6 @@ def print_game(matrix,screen, step, total_weight, on_pause, boxes=None):
                 for k in range(0, len(positions)):
                     if i==positions[k][0] and j==positions[k][1]:
                         draw_weight_on_box(weights[k], x, y, box)
-            # elif char == '*': #box on dock
-            #     screen.blit(box_docked, (x, y))
-            # elif char == '$': #box
-            #     screen.blit(box, (x, y))
             elif char == '+': #worker on dock
                 screen.blit(worker_docked,(x,y))
             x = x + 32
@@ -193,14 +187,14 @@ def choose_algo(screen, btns):
                    if y >= h1 + 100*i and y <= h1 + 100*i + y0:
                       return options[i]
              
-        print_game(_game.start_state.get_matrix(), screen, 0, 0, 0, _game.start_state.box)
+        print_game(_game.start_state.get_matrix(), screen, 0, 0, boxes=_game.start_state.box)
         for btn in btns:
             btn.draw()
         pygame.display.flip()
     return 'BFS'
 def rerender_running(screen, message_box, btns):
   while not stop_event.is_set():
-    print_game(_game.start_state.get_matrix(), screen, 0, 0, 0, _game.start_state.box)
+    print_game(_game.start_state.get_matrix(), screen, 0, 0, boxes=_game.start_state.box)
     for btn in btns:
        btn.draw()
     display_box(screen, message_box)
@@ -230,7 +224,7 @@ while True:
     stop_event.set()
     thread_render.join()
     
-    print_game(_game.start_state.get_matrix(), screen, 0, 0, 0, _game.start_state.box)
+    print_game(_game.start_state.get_matrix(), screen, 0, 0, 0, boxes=_game.start_state.box)
     
     pygame.display.update()
 
@@ -243,10 +237,10 @@ while True:
     while True:
         for event in pygame.event.get():
            if event.type == pygame.MOUSEBUTTONDOWN:
-              if pygame.Rect(1000, 500, 180, 40).collidepoint(event.pos):
+              if pygame.Rect(1000, 350, 180, 40).collidepoint(event.pos):
                  on_pause = not on_pause
         if on_pause:
-           print_game(_game.start_state.get_matrix(), screen, index, total_weight, on_pause, _game.start_state.box)
+           print_game(_game.start_state.get_matrix(), screen, index, total_weight, on_pause, boxes=_game.start_state.box)
            continue
         total_weight += flag[index]
         
