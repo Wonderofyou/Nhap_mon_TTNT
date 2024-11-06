@@ -53,10 +53,10 @@ class Search:
 
                             if child.is_completed():
                                 # Nếu trạng thái hoàn thành, không cần thêm vào ngăn xếp
-                                return current_weight+res[0], size/(1024**2) , path + [move], flag + [res[1]], node
+                                return current_weight+res[0], size/(1024**2) , path + [move], flag + [res[0]], node
 
                             # Thêm trạng thái con vào ngăn xếp với trọng số
-                            stack.append((child, path + [move], current_weight+res[0], flag + [res[1]]))
+                            stack.append((child, path + [move], current_weight+res[0], flag + [res[0]]))
 
 
             return 0, size /(1024**2), [], flag, node
@@ -93,9 +93,9 @@ class Search:
 
                             if child.is_completed():
                                 # If the state is complete, return immediately without adding it to the queue
-                                return current_weight + res[0], size/(1024**2) , path + [move], flag + [res[1]], node
+                                return current_weight + res[0], size/(1024**2) , path + [move], flag + [res[0]], node
                         # Add the child state to the queue with the accumulated weight
-                        queue.append((child, path + [move], current_weight + res[0], flag + [res[1]]))
+                        queue.append((child, path + [move], current_weight + res[0], flag + [res[0]]))
 
             return 0, size/(1024**2) , [], flag, node
 
@@ -132,8 +132,10 @@ class Search:
                             node += 1
                             StateSpace.open_close_set.add(child_string)
 
+
                             # Add the child state to the heap with the accumulated weight
-                            heapq.heappush(heap_states, (child_cost, child_string, child, path + [move], current_weight + res[0], flag + [res[1]]))
+                            heapq.heappush(heap_states, (child_cost, child_string, child, path + [move], current_weight + res[0], flag + [res[0]]))
+                            
             return 0, size/(1024**2) , [], flag, node
 
         # (0, 1) (0, -1), (1, 0), (-1, 0)
@@ -175,21 +177,19 @@ class Search:
                         if child_string not in StateSpace.open_close_set:
                             node += 1
                             StateSpace.open_close_set.add(child_string)
-                                        
                             # Tính f_score mới = g(n) + h(n)
                             child_g_score = 0
                             
                             child_g_score = g_score + res[0] + 1  # Chi phí thực tế từ start đến node hiện tại
                             
                             child_h_score = 0
-                            
                             if(res[1]):
                                 child_h_score = utils.calculate_heuristic(child.box, switches)  # Ước lượng chi phí từ node hiện tại đến goal
                             else:
                                 child_h_score = f_score - g_score
                             
                             child_f_score = child_g_score + child_h_score
-                            pq.put((child_f_score, child_g_score, counter, current_weight+ res[0], child, path + [move], flag + [res[1]]))
-                            counter += 1
-                    
+                            pq.put((child_f_score, child_g_score, counter, current_weight+ res[0], child, path + [move], flag + [res[0]]))
+
+                            counter += 1                  
             return 0, size/(1024**2), [], flag, node
