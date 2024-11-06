@@ -14,8 +14,10 @@ class Search:
         self.search_alg = search_alg
         self.start = state
         self.moves = moves  
+        
 
     def search(self):
+        StateSpace.open_close_set.clear()
         if self.search_alg == 'DFS':
             stack = deque([(self.start, [], 0, [])])  # Stack holds tuples of (state, path, weight, flag)
             StateSpace.open_close_set.add(self.start.to_string())
