@@ -97,8 +97,8 @@ class StateSpace:
                 box[1] = t
                 return box[2] # get the weight
     def move_box(self,x,y,a,b):
-#        (x,y) -> move to do
-#        (a,b) -> box to move
+#        (x,y) -> box to move
+#        (a,b) -> move to do 
         current_box = self.get_content(x,y)
         future_box = self.get_content(x+a,y+b)
         if current_box == '$' and future_box == ' ':
@@ -174,7 +174,7 @@ class StateSpace:
             elif current[2] == '+' and future == '$' and future_box == '.':
                 weight = self.move_box(current[0]+x,current[1]+y,x,y)
                 self.set_content(current[0],current[1],'.')
-                self.set_content(current[0]+x,current[1]+y,'+')
+                self.set_content(current[0]+x,current[1]+y,'@')
 
             elif current[2] == '+' and future == '*' and future_box == ' ':
                 weight = self.move_box(current[0]+x,current[1]+y,x,y)
