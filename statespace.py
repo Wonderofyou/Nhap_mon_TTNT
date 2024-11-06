@@ -104,19 +104,24 @@ class StateSpace:
         if current_box == '$' and future_box == ' ':
             self.set_content(x+a,y+b,'$')
             self.set_content(x,y,' ')#update on matrix only
+            print(1)
             weight = self.set_box(x,y,x+a,y+b)#update on self.box
         elif current_box == '$' and future_box == '.':
             self.set_content(x+a,y+b,'*')
             self.set_content(x,y,' ')
             weight =  self.set_box(x,y,x+a,y+b)
+            print(x,y,a,b)
+            print(2)
         elif current_box == '*' and future_box == ' ':
             self.set_content(x+a,y+b,'$')
             self.set_content(x,y,'.')
             weight =  self.set_box(x,y,x+a,y+b)
+            print(3)
         elif current_box == '*' and future_box == '.':
             self.set_content(x+a,y+b,'*')
             self.set_content(x,y,'.')
             weight = self.set_box(x,y,x+a,y+b)
+            print(4)
         return weight
 
     def can_move_or_push(self,x,y):
@@ -172,9 +177,10 @@ class StateSpace:
                 self.set_content(current[0]+x,current[1]+y,'@')
 
             elif current[2] == '+' and future == '$' and future_box == '.':
+                print("Case!")
                 weight = self.move_box(current[0]+x,current[1]+y,x,y)
                 self.set_content(current[0],current[1],'.')
-                self.set_content(current[0]+x,current[1]+y,'+')
+                self.set_content(current[0]+x,current[1]+y,'@')
 
             elif current[2] == '+' and future == '*' and future_box == ' ':
                 weight = self.move_box(current[0]+x,current[1]+y,x,y)
@@ -233,7 +239,6 @@ def write_to_file(inputfile, outputfile, algorithms, moves=[(0, -1), (0, 1), (-1
 
 
 
-#Uncomment to play game in command line
 # start_state = StateSpace('levels_weight')
 # start_state.print_matrix()
 # print(start_state.box)
@@ -250,8 +255,7 @@ def write_to_file(inputfile, outputfile, algorithms, moves=[(0, -1), (0, 1), (-1
 #         start_state.get_child(1,0)
 #     if command == 'q':
 #         break
-#     start_state.print_matrix()  
-#     print(start_state.box)          
+#     start_state.print_matrix()          
 
 
 
