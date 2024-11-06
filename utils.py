@@ -31,3 +31,55 @@ def calculate_heuristic(stones, switches):
         min_weighted_distance = cost_matrix[stone_indices, switch_indices].sum()
     
         return min_weighted_distance  
+
+
+def is_corner_deadlock(state, box):
+    """
+    Kiểm tra deadlock ở góc:
+    ##
+    #$ 
+    Trong đó # là tường và $ là hộp
+    """
+    x, y = box[0], box[1]
+    matrix = state.matrix
+    
+    # Kiểm tra 4 góc
+    corners = [
+        # Góc trên bên trái
+        (matrix[x-1][y] == '#' and matrix[x][y-1] == '#'),
+        # Góc trên bên phải
+        (matrix[x-1][y] == '#' and matrix[x][y+1] == '#'),
+        # Góc dưới bên trái
+        (matrix[x+1][y] == '#' and matrix[x][y-1] == '#'),
+        # Góc dưới bên phải
+        (matrix[x+1][y] == '#' and matrix[x][y+1] == '#')
+    ]
+    
+    # Nếu hộp ở góc và không phải điểm đích
+    return any(corners) and matrix[x][y] not in ['.', '*']
+
+
+def check_deadlock(state):
+
+    for box in state.box:
+        # Kiểm tra từng loại deadlock
+        if is_corner_deadlock(state, box):
+            return True
+        
+    return False
+
+
+def simple_heuristic(stones,switches):
+    total_cost= 0
+    
+    for stone in stones:
+        min_dist = float('inf')
+        for switch in switches:
+            dist = get_manhattan_distance((stone[0],stone[1]),switch)
+            min_dist = min(min_dist,dist)
+        total_cost += min_dist*stone[2]    
+    
+    
+    return total_cost
+
+
