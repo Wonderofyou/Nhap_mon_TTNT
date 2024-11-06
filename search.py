@@ -53,10 +53,10 @@ class Search:
 
                             if child.is_completed():
                                 # Nếu trạng thái hoàn thành, không cần thêm vào ngăn xếp
-                                return current_weight+res[0], size/(1024**2) , path + [move], flag + [res[1]], node
+                                return current_weight+res[0], size/(1024**2) , path + [move], flag + [res[0]], node
 
                             # Thêm trạng thái con vào ngăn xếp với trọng số
-                            stack.append((child, path + [move], current_weight+res[0], flag + [res[1]]))
+                            stack.append((child, path + [move], current_weight+res[0], flag + [res[0]]))
 
 
             return 0, size /(1024**2), [], flag, node
@@ -93,9 +93,9 @@ class Search:
 
                             if child.is_completed():
                                 # If the state is complete, return immediately without adding it to the queue
-                                return current_weight + res[0], size/(1024**2) , path + [move], flag + [res[1]], node
+                                return current_weight + res[0], size/(1024**2) , path + [move], flag + [res[0]], node
                         # Add the child state to the queue with the accumulated weight
-                        queue.append((child, path + [move], current_weight + res[0], flag + [res[1]]))
+                        queue.append((child, path + [move], current_weight + res[0], flag + [res[0]]))
 
             return 0, size/(1024**2) , [], flag, node
 
@@ -134,11 +134,11 @@ class Search:
 
                             # if child.is_completed():
                             #     # If the state is complete, return immediately without adding it to the queue
-                            #     return current_weight + res[0], size, path + [move], flag + [res[1]], node
+                            #     return current_weight + res[0], size, path + [move], flag + [res[0]], node
 
                             # Add the child state to the heap with the accumulated weight
                             print(node, child_cost, move[0]*0.5 + move[1], move[0], move[1])
-                            heapq.heappush(heap_states, (child_cost, child_string, child, path + [move], current_weight + res[0], flag + [res[1]]))
+                            heapq.heappush(heap_states, (child_cost, child_string, child, path + [move], current_weight + res[0], flag + [res[0]]))
             return 0, size/(1024**2) , [], flag, node
 
         # (0, 1) (0, -1), (1, 0), (-1, 0)
@@ -182,7 +182,7 @@ class Search:
                             StateSpace.open_close_set.add(child_string)
                     
                             # if child.is_completed():
-                            #     return current_weight + res[0], size, path + [move], flag + [res[1]], node
+                            #     return current_weight + res[0], size, path + [move], flag + [res[0]], node
 
 
                     
@@ -193,7 +193,7 @@ class Search:
                             
                             child_h_score = 0
                             
-                            # if(res[1]):
+                            # if(res[0]):
                             #     child_h_score = utils.calculate_heuristic(child.box, switches)  # Ước lượng chi phí từ node hiện tại đến goal
                             #     #h_score = utils.simple_heuristic(child.box, switches)
                             # else:
@@ -203,7 +203,7 @@ class Search:
                             
                             child_f_score = child_g_score + child_h_score
                             print(node, child_g_score, move[0]*0.5 + move[1], move[0], move[1])
-                            pq.put((child_f_score, child_g_score, counter, current_weight+ res[0], child, path + [move], flag + [res[1]]))
+                            pq.put((child_f_score, child_g_score, counter, current_weight+ res[0], child, path + [move], flag + [res[0]]))
                             counter += 1
                     
             return 0, size/(1024**2), [], flag, node
