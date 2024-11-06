@@ -53,20 +53,22 @@ def draw_pause_btn(screen, on_pause):
                               button_y + (button_height - button_text.get_height()) // 2))
     return button_x, button_y, button_width, button_height
    
-def print_game(matrix,screen, step, total_weight, on_pause=None, boxes=None):
+def print_game(matrix,screen, step, total_weight=None, on_pause=None, boxes=None):
     positions = [x[:2] for x in boxes]  # Lấy 2 phần tử đầu của mỗi phần tử trong a
     weights = [x[-1] for x in boxes]
     screen.fill(background)
     x = 0
     y = 0
-    font = pygame.font.Font(None, 36)
-    steps_text = font.render(f"Steps: {step}", True, (0, 0, 0))
-    weight_text = font.render(f"Weight: {total_weight}", True, (0, 0, 0))
+    if total_weight is not None:
+      font = pygame.font.Font(None, 36)
+      steps_text = font.render(f"Steps: {step}", True, (0, 0, 0))
+      weight_text = font.render(f"Weight: {total_weight}", True, (0, 0, 0))
+      screen.blit(steps_text, (1000, 150))
+      screen.blit(weight_text, (1000, 200))
     if on_pause is not None:
        draw_pause_btn(screen, on_pause)
     
-    screen.blit(steps_text, (900, 50))
-    screen.blit(weight_text, (900, 100))
+
     for i, (row) in enumerate(matrix):
         for j, (char) in enumerate(row):
             if char == ' ': #floor
@@ -187,14 +189,14 @@ def choose_algo(screen, btns):
                    if y >= h1 + 100*i and y <= h1 + 100*i + y0:
                       return options[i]
              
-        print_game(_game.start_state.get_matrix(), screen, 0, 0, boxes=_game.start_state.box)
+        print_game(_game.start_state.get_matrix(), screen, step=0, boxes=_game.start_state.box)
         for btn in btns:
             btn.draw()
         pygame.display.flip()
     return 'BFS'
 def rerender_running(screen, message_box, btns):
   while not stop_event.is_set():
-    print_game(_game.start_state.get_matrix(), screen, 0, 0, boxes=_game.start_state.box)
+    print_game(_game.start_state.get_matrix(), screen, step=0, boxes=_game.start_state.box)
     for btn in btns:
        btn.draw()
     display_box(screen, message_box)
@@ -224,7 +226,7 @@ while True:
     stop_event.set()
     thread_render.join()
     
-    print_game(_game.start_state.get_matrix(), screen, 0, 0, 0, boxes=_game.start_state.box)
+    print_game(_game.start_state.get_matrix(), screen, step=0, boxes=_game.start_state.box)
     
     pygame.display.update()
 
