@@ -241,7 +241,7 @@ def write_to_file(inputfile, outputfile, algorithms, moves=[(0, -1), (0, 1), (-1
 from game import *
 if __name__ =="__main__":
 
-    for i in range (1,5):
+    for i in range (5,7):
         start_state = StateSpace(filename=f"input-{i:02}.txt")
         write_to_file(f"input-{i:02}.txt",f"output-{i:02}.txt",['UCS','A*','BFS','DFS'])
         Game = game(i)
