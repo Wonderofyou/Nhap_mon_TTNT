@@ -142,7 +142,7 @@ class Search:
             return 0, size/(1024**2) , [], flag, node
 
         # (0, 1) (0, -1), (1, 0), (-1, 0)
-        elif self.search_alg == 'AStar':
+        elif self.search_alg == 'A*':
             pq = PriorityQueue()
             switches = utils.get_positions(self.start.matrix)
             h_score = utils.calculate_heuristic(self.start.box, switches)
@@ -183,6 +183,7 @@ class Search:
                     
                             # if child.is_completed():
                             #     return current_weight + res[0], size, path + [move], flag + [res[1]], node
+
 
                     
                             # Tính f_score mới = g(n) + h(n)

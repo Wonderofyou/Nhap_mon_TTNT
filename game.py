@@ -32,12 +32,14 @@ class game:
             
 
     def load_size(self):
-        x = 0
-        y = len(self.start_state.get_matrix())
-        for row in self.start_state.get_matrix():
-            if len(row) > x:
-                x = len(row)
-        return (x * game.scale, y * game.scale)
+
+        # x = 0
+        # y = len(self.start_state.get_matrix())
+        # for row in self.start_state.get_matrix():
+        #     if len(row) > x:
+        #         x = len(row)
+        # return (x * 32, y * 32)
+        return (1216, 640)
     
     def load_move_from_file(self, output_file):
         # Initialize the dictionary to store results

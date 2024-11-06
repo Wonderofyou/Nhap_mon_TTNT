@@ -1,8 +1,10 @@
 #!../bin/python
-
+import threading
 import sys
 import pygame
-
+import os
+from events import *
+from widgets import sidebar_widgets
 from statespace import StateSpace
 from search import Search
 from game import game
@@ -25,15 +27,12 @@ def draw_weight_on_box(number, x, y, image):
     pygame.draw.circle(screen, (255, 255, 255), (circle_x, circle_y), 12)
     pygame.draw.circle(screen, (0, 0, 0), (circle_x, circle_y), 12, 2)  # Viền đen xung quanh
 
-
     # Vẽ số lên hình tròn
     screen.blit(text_surface, text_rect)
 
-
-def print_game(matrix,screen, boxes=None, scale=0):
+def print_game(matrix,screen, boxes=None):
     positions = [x[:2] for x in boxes]  # Lấy 2 phần tử đầu của mỗi phần tử trong a
     weights = [x[-1] for x in boxes]
-
     screen.fill(background)
     x = 0
     y = 0
@@ -61,9 +60,9 @@ def print_game(matrix,screen, boxes=None, scale=0):
             #     screen.blit(box, (x, y))
             elif char == '+': #worker on dock
                 screen.blit(worker_docked,(x,y))
-            x = x + scale
+            x = x + 32
         x = 0
-        y = y + scale
+        y = y + 32
 
 
 def get_key():
@@ -124,77 +123,84 @@ def ask(screen, question):
     display_box(screen, question + ": " + "".join(current_string))
   return "".join(current_string)
 
-def draw_mode_buttons(screen):
-    font = pygame.font.Font(None, 24)
-    button_texts = ['BFS', 'DFS', 'AStar', 'UCS']
-    buttons = []
-    
-    for i, text in enumerate(button_texts):
-        rect = pygame.Rect(50, 50 + i * 60, 100, 40)  # Đặt vị trí các nút
-        pygame.draw.rect(screen, (200, 200, 200), rect)  # Màu nền nút
-        pygame.draw.rect(screen, (0, 0, 0), rect, 2)  # Viền nút
-        text_surface = font.render(text, True, (0, 0, 0))
-        screen.blit(text_surface, (rect.x + 20, rect.y + 10))
-        buttons.append((rect, text))
-    
-    pygame.display.update()
-    return buttons
-
-def get_mode_selection(screen):
-    buttons = draw_mode_buttons(screen)
-    while True:
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                pygame.quit()
-                sys.exit()
-            elif event.type == pygame.MOUSEBUTTONDOWN:
-                mouse_pos = event.pos
-                for button, mode in buttons:
-                    if button.collidepoint(mouse_pos):
-                        return mode  # Trả về chế độ đã chọn
-
-
-def start_game():
-    start = pygame.display.set_mode((320,240))
+def start_game(start):
+    #start = pygame.display.set_mode((320,240))
     level = int(ask(start,"Select Level"))
     if level > 0:
-        mode = get_mode_selection(start)  # Nhận chế độ tìm kiếm từ nút
-        return level, mode
+        return level
     else:
         print("ERROR: Invalid Level: "+str(level))
         sys.exit(2)
 
-wall = pygame.transform.scale(pygame.image.load('images/wall.png'), (64, 64))
-floor = pygame.transform.scale(pygame.image.load('images/floor.png'), (64, 64))
-box = pygame.transform.scale(pygame.image.load('images/box.png'), (64, 64))
-box_docked = pygame.transform.scale(pygame.image.load('images/box_docked.png'), (64, 64))
-worker = pygame.transform.scale(pygame.image.load('images/worker.png'), (64, 64))
-worker_docked = pygame.transform.scale(pygame.image.load('images/worker_dock.png'), (64, 64))
-docker = pygame.transform.scale(pygame.image.load('images/dock.png'), (64, 64))
+wall = pygame.image.load('images/wall.png')
+floor = pygame.image.load('images/floor.png')
+box = pygame.image.load('images/box.png')
+box_docked = pygame.image.load('images/box_docked.png')
+worker = pygame.image.load('images/worker.png')
+worker_docked = pygame.image.load('images/worker_dock.png')
+docker = pygame.image.load('images/dock.png')
 background = 255, 226, 191
 pygame.init()
+moves = [(0, 1), (0, -1), (1, 0), (-1, 0)]
+def choose_algo(screen, btns):
+    w = 1055
+    h1 = 100
+    x0 = 130
+    y0 = 40
+    waiting_option = True
+    options = ['A*', 'BFS', 'DFS', 'UCS']
+    while waiting_option:
+        for event in pygame.event.get():
+          if event.type == pygame.QUIT:
+            waiting_option = False   
+          if event.type == pygame.MOUSEBUTTONDOWN:
+             x, y = event.pos
+             if x >= w and x <= w + x0:
+                for i, (btn) in enumerate(btns):
+                   if y >= h1 + h1*i and y <= h1 + h1*i + y0:
+                      return options[i]
+             
+        print_game(_game.start_state.get_matrix(), screen, _game.start_state.box)
+        for btn in btns:
+            btn.draw()
+        pygame.display.flip()
+    return 'BFS'
+def rerender_running(screen, message_box, btns):
+  while not stop_event.is_set():
+    print_game(_game.start_state.get_matrix(), screen, _game.start_state.box)
+    for btn in btns:
+       btn.draw()
+    display_box(screen, message_box)
 
-moves = [(0, 1), (0, -1), (1, 0), (-1, 0)]# LRUD
-
+os.environ['SDL_VIDEO_WINDOW_POS'] = "100,100"
 
 
 while True:
     # Chọn lại level khi trò chơi hoàn tất
-    
-    level, mode = start_game()
-    Game = game(level)
-    size = Game.load_size()
+    screen = pygame.display.set_mode((1216, 640))
+    btns = sidebar_widgets(screen)
+    level = start_game(screen)
+    _game = game(level)
+
+    size = _game.load_size()
     screen = pygame.display.set_mode(size)
+    stop_event = threading.Event()
+    option = choose_algo(screen=screen, btns=btns)
+    print("Algorithm:", option)
+    s = Search(option, _game.start_state, moves)
+         
 
-    Game.start_state.print_matrix()
-    s = Search(mode, Game.start_state, moves)#choose alg here
-    print_game(Game.start_state.get_matrix(), screen, Game.start_state.box, game.scale)
-
-    display_box(screen,"Computing...")
-    pygame.display.update()
+    # Đa luồng để khi nó chạy cái search thì màn hình luôn được render lại
+    thread_render = threading.Thread(target=rerender_running, args=(screen, "Computing...", btns,  ))
+    thread_render.start()
     weight, size , path, flag, node = s.search()
-    print(weight,size,path,flag,node)
+    stop_event.set()
+    thread_render.join()
     
+    print_game(_game.start_state.get_matrix(), screen, _game.start_state.box)
+    
+    pygame.display.update()
+
 
     move_list = path #load move from file. If file is empty, change this code to get move list
     index = 0 
@@ -205,20 +211,20 @@ while True:
         # Chỉ thực hiện di chuyển nếu lần cập nhật màn hình trước đó đã hoàn tất
         if is_drawn and index < len(move_list):
             dx, dy = move_list[index]
-            Game.start_state.get_child(dx, dy)  # Thực hiện di chuyển
+            _game.start_state.get_child(dx, dy)  # Thực hiện di chuyển
             index += 1
             is_drawn = False  # Đặt lại flag, chờ việc vẽ hoàn tất
 
         # Cập nhật màn hình
-        print_game(Game.start_state.get_matrix(), screen, Game.start_state.box, game.scale)
+        print_game(_game.start_state.get_matrix(), screen, _game.start_state.box)
         pygame.display.update()
         is_drawn = True  # Đặt lại flag sau khi cập nhật xong màn hình
 
         # Kiểm tra xem game đã hoàn tất hay chưa
-        if Game.start_state.is_completed():
+        if _game.start_state.is_completed():
             pygame.display.update()
-            # display_end(screen=screen)
-            # pygame.time.delay(1000)  # Đợi một lúc trước khi quay lại màn hình chọn
+            display_end(screen=screen)
+            pygame.time.delay(1000)  # Đợi một lúc trước khi quay lại màn hình chọn
             break  # Quay lại vòng lặp bên ngoài để chọn level mới
 
-        pygame.time.delay(100)
+        pygame.time.delay(50)
