@@ -29,13 +29,44 @@ def draw_weight_on_box(number, x, y, image):
 
     # Vẽ số lên hình tròn
     screen.blit(text_surface, text_rect)
+def draw_pause_btn(screen, on_pause):
+    button_x, button_y, button_width, button_height = 1000, 350, 180, 40
+    radius = 5
+    border_thickness = 2
+    font = pygame.font.SysFont('Verdana', 14, bold=True)
+    button_text = font.render("Pause/Continue", True, (0, 0, 0))
+    button_rect = pygame.Rect(button_x, button_y, button_width, button_height)
+    button_rect = pygame.Rect(button_x, button_y, button_width, button_height)
 
-def print_game(matrix,screen, boxes=None):
+    
+    if on_pause:
+      color =  (200, 200, 200)
+    else:
+      color = (150, 150, 150)
+
+    pygame.draw.rect(screen, (0, 0, 0), button_rect, border_radius=radius)
+
+    inner_rect = button_rect.inflate(-border_thickness*2, -border_thickness*2)
+    pygame.draw.rect(screen, color, inner_rect, border_radius=radius)
+
+    screen.blit(button_text, (button_x + (button_width - button_text.get_width()) // 2,
+                              button_y + (button_height - button_text.get_height()) // 2))
+    return button_x, button_y, button_width, button_height
+   
+def print_game(matrix,screen, step, total_weight, on_pause=None, boxes=None):
     positions = [x[:2] for x in boxes]  # Lấy 2 phần tử đầu của mỗi phần tử trong a
     weights = [x[-1] for x in boxes]
     screen.fill(background)
     x = 0
     y = 0
+    font = pygame.font.Font(None, 36)
+    steps_text = font.render(f"Steps: {step}", True, (0, 0, 0))
+    weight_text = font.render(f"Weight: {total_weight}", True, (0, 0, 0))
+    if on_pause is not None:
+       draw_pause_btn(screen, on_pause)
+    
+    screen.blit(steps_text, (900, 50))
+    screen.blit(weight_text, (900, 100))
     for i, (row) in enumerate(matrix):
         for j, (char) in enumerate(row):
             if char == ' ': #floor
@@ -54,10 +85,6 @@ def print_game(matrix,screen, boxes=None):
                 for k in range(0, len(positions)):
                     if i==positions[k][0] and j==positions[k][1]:
                         draw_weight_on_box(weights[k], x, y, box)
-            # elif char == '*': #box on dock
-            #     screen.blit(box_docked, (x, y))
-            # elif char == '$': #box
-            #     screen.blit(box, (x, y))
             elif char == '+': #worker on dock
                 screen.blit(worker_docked,(x,y))
             x = x + 32
@@ -131,7 +158,7 @@ def start_game(start):
     else:
         print("ERROR: Invalid Level: "+str(level))
         sys.exit(2)
-
+   
 wall = pygame.image.load('images/wall.png')
 floor = pygame.image.load('images/floor.png')
 box = pygame.image.load('images/box.png')
@@ -157,17 +184,17 @@ def choose_algo(screen, btns):
              x, y = event.pos
              if x >= w and x <= w + x0:
                 for i, (btn) in enumerate(btns):
-                   if y >= h1 + h1*i and y <= h1 + h1*i + y0:
+                   if y >= h1 + 100*i and y <= h1 + 100*i + y0:
                       return options[i]
              
-        print_game(_game.start_state.get_matrix(), screen, _game.start_state.box)
+        print_game(_game.start_state.get_matrix(), screen, 0, 0, boxes=_game.start_state.box)
         for btn in btns:
             btn.draw()
         pygame.display.flip()
     return 'BFS'
 def rerender_running(screen, message_box, btns):
   while not stop_event.is_set():
-    print_game(_game.start_state.get_matrix(), screen, _game.start_state.box)
+    print_game(_game.start_state.get_matrix(), screen, 0, 0, boxes=_game.start_state.box)
     for btn in btns:
        btn.draw()
     display_box(screen, message_box)
@@ -197,17 +224,25 @@ while True:
     stop_event.set()
     thread_render.join()
     
-    print_game(_game.start_state.get_matrix(), screen, _game.start_state.box)
+    print_game(_game.start_state.get_matrix(), screen, 0, 0, 0, boxes=_game.start_state.box)
     
     pygame.display.update()
-
 
     move_list = path #load move from file. If file is empty, change this code to get move list
     index = 0 
     is_drawn = True  # Khởi tạo với True để bắt đầu di chuyển đầu tiên
-        
+    total_weight = 0
+    on_pause = False
     while True:
-
+        for event in pygame.event.get():
+           if event.type == pygame.MOUSEBUTTONDOWN:
+              if pygame.Rect(1000, 350, 180, 40).collidepoint(event.pos):
+                 on_pause = not on_pause
+        if on_pause:
+           print_game(_game.start_state.get_matrix(), screen, index, total_weight, on_pause, boxes=_game.start_state.box)
+           continue
+        total_weight += flag[index]
+        
         # Chỉ thực hiện di chuyển nếu lần cập nhật màn hình trước đó đã hoàn tất
         if is_drawn and index < len(move_list):
             dx, dy = move_list[index]
@@ -216,7 +251,7 @@ while True:
             is_drawn = False  # Đặt lại flag, chờ việc vẽ hoàn tất
 
         # Cập nhật màn hình
-        print_game(_game.start_state.get_matrix(), screen, _game.start_state.box)
+        print_game(_game.start_state.get_matrix(), screen, index, total_weight, on_pause, _game.start_state.box)
         pygame.display.update()
         is_drawn = True  # Đặt lại flag sau khi cập nhật xong màn hình
 
@@ -224,7 +259,7 @@ while True:
         if _game.start_state.is_completed():
             pygame.display.update()
             display_end(screen=screen)
-            pygame.time.delay(1000)  # Đợi một lúc trước khi quay lại màn hình chọn
+            pygame.time.delay(5000)  # Đợi một lúc trước khi quay lại màn hình chọn
             break  # Quay lại vòng lặp bên ngoài để chọn level mới
 
-        pygame.time.delay(50)
+        pygame.time.delay(800)
