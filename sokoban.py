@@ -344,7 +344,6 @@ while True:
     # Chọn level và khởi tạo game
     screen = pygame.display.set_mode((1216, 640))
     btns = sidebar_widgets(screen)
-    print(should_restart)
     if not should_restart:
       level = start_game(screen)
     _game = game(level)
@@ -364,6 +363,7 @@ while True:
     index = 0
     
     # Search algorithm loop
+    start_time = time.time()
     while running:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -391,7 +391,8 @@ while True:
              
     print_game(_game.start_state.get_matrix(), screen, step=0, boxes=_game.start_state.box)
     pygame.display.update()
-
+    end_time = time.time()
+    print("Time:", end_time-start_time)
     move_list = path
     index = 0 
     is_drawn = True
@@ -399,6 +400,7 @@ while True:
     on_pause = False
     
     # Game movement loop
+    should_restart = False
     while not should_restart:
         for event in pygame.event.get():
             if event.type == pygame.MOUSEBUTTONDOWN:
@@ -448,6 +450,8 @@ while True:
                     waiting = False
                     
         if _game.start_state.is_completed():
+            print("Steps:", index)
+            print("Weight:", total_weight)
             should_restart = False
             on_return = True
             while on_return:
@@ -464,7 +468,7 @@ while True:
               display_end(screen=screen)
             break
 
-        pygame.time.delay(500)
+        pygame.time.delay(50)
   
   
   # while True:
