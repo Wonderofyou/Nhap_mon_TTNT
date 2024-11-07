@@ -103,7 +103,6 @@ class Search:
 
         elif self.search_alg == "UCS":
             pq = PriorityQueue()
-            switches = utils.get_positions(self.start.matrix)
             weight = 0
             cost = 0 
             counter = 0
