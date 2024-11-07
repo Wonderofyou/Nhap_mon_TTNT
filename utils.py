@@ -29,6 +29,7 @@ def calculate_heuristic(stones, switches):
         stone_indices, switch_indices = linear_sum_assignment(cost_matrix)
         
         min_weighted_distance = cost_matrix[stone_indices, switch_indices].sum()
+
     
         return min_weighted_distance  
 

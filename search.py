@@ -104,15 +104,15 @@ class Search:
         elif self.search_alg == "UCS":
             pq = PriorityQueue()
             weight = 0
-            cost = 0 
+            total_cost = 0 
             counter = 0
-            pq.put((cost, counter, weight, self.start, [], []))
+            pq.put((total_cost, counter, weight, self.start, [], []))
             counter += 1
             StateSpace.open_close_set.add(self.start.to_string())
             node = 1
             size = sys.getsizeof(self.start)
             while not pq.empty():
-                cost, _, current_weight, current_state, path, flag = pq.get()
+                total_cost, _, current_weight, current_state, path, flag = pq.get()
         
                 if current_state.is_completed():
                     return current_weight, size/(1024**2), path, flag, node
@@ -127,19 +127,16 @@ class Search:
                     if current_state.can_move_or_push(move[0], move[1]):
                         child = copy.deepcopy(current_state)
                         res = child.get_child(move[0], move[1])
+                        
                         size+=sys.getsizeof(child)
-
                         
                         child_string = child.to_string()
                 
                         if child_string not in StateSpace.open_close_set:
                             node += 1
-                            StateSpace.open_close_set.add(child_string)
-                            child_cost = 0
-                            
-                            child_cost = cost + res[0] + 1  # Chi phí thực tế từ start đến node hiện tại
-                            pq.put((child_cost, counter, current_weight+ res[0], child, path + [move], flag + [res[0]]))
-
+                            StateSpace.open_close_set.add(child_string)   
+                            child_total_cost = total_cost + res[0] + 1  # Chi phí thực tế từ start đến node hiện tại
+                            pq.put((child_total_cost, counter, current_weight+ res[0], child, path + [move], flag + [res[0]]))
                             counter += 1                  
             return 0, size/(1024**2), [], flag, node
 
