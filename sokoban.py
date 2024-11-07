@@ -9,6 +9,9 @@ from statespace import StateSpace
 from search import Search
 from game import game
 import time
+import queue
+
+import pygame_widgets
 
 
 
@@ -99,6 +102,9 @@ def get_key():
     event = pygame.event.poll()
     if event.type == pygame.KEYDOWN:
       return event.key
+    elif event.type == pygame.QUIT:
+      pygame.quit()
+      sys.exit()
     else:
       pass
 
@@ -170,7 +176,25 @@ worker_docked = pygame.image.load('images/worker_dock.png')
 docker = pygame.image.load('images/dock.png')
 background = 255, 226, 191
 pygame.init()
-moves = [(0, 1), (0, -1), (1, 0), (-1, 0)]
+moves = [(0, -1), (0, 1), (-1, 0), (1, 0)]
+running = True
+result_queue = queue.Queue()
+searching = False
+search_thread = None
+complete_search = False
+
+def handle_algorithm_selection(event):
+    if event.type == SOLVE_ASTAR_EVENT:
+        return 'A*'
+    elif event.type == SOLVE_BFS_EVENT:
+        return 'BFS'
+    elif event.type == SOLVE_DFS_EVENT:
+        return 'DFS'
+    elif event.type == SOLVE_UCS_EVENT:
+        return 'UCS'
+    return None
+  
+  
 def choose_algo(screen, btns):
     w = 1055
     h1 = 100
@@ -179,21 +203,26 @@ def choose_algo(screen, btns):
     waiting_option = True
     options = ['A*', 'BFS', 'DFS', 'UCS']
     while waiting_option:
-        for event in pygame.event.get():
+        events = pygame.event.get()       
+        pygame_widgets.update(events)
+        for event in events:
           if event.type == pygame.QUIT:
-            waiting_option = False   
-          if event.type == pygame.MOUSEBUTTONDOWN:
-             x, y = event.pos
-             if x >= w and x <= w + x0:
-                for i, (btn) in enumerate(btns):
-                   if y >= h1 + 100*i and y <= h1 + 100*i + y0:
-                      return options[i]
-             
+            running = False
+            waiting_option = False
+            pygame.quit()
+            sys.exit()
+            
+          algorithm = handle_algorithm_selection(event)
+          if algorithm:
+            return algorithm
+          
         print_game(_game.start_state.get_matrix(), screen, step=0, boxes=_game.start_state.box)
-        for btn in btns:
-            btn.draw()
+        for btn in btns:          
+          btn.draw()
         pygame.display.flip()
-    return 'BFS'
+  
+  
+  
 def rerender_running(screen, message_box, btns):
   while not stop_event.is_set():
     print_game(_game.start_state.get_matrix(), screen, step=0, boxes=_game.start_state.box)
@@ -201,73 +230,160 @@ def rerender_running(screen, message_box, btns):
        btn.draw()
     display_box(screen, message_box)
 
+
+
+
 os.environ['SDL_VIDEO_WINDOW_POS'] = "100,100"
 
 
+
+def run_search(search_instance):
+  
+  global complete_search
+  try:
+      # Chạy thuật toán search trong thread riêng
+      weight, size, path, flag, node = search_instance.search()
+      # Sử dụng queue để gửi kết quả về main thread
+      result_queue.put((weight, size, path, flag, node))
+      complete_search = True
+  except Exception as e:
+      result_queue.put(e)
+
+
+
 while True:
-    # Chọn lại level khi trò chơi hoàn tất
-    screen = pygame.display.set_mode((1216, 640))
-    btns = sidebar_widgets(screen)
-    level = start_game(screen)
-    _game = game(level)
+  
+  searching = False
+  complete_search = False
+  result_queue = queue.Queue()  # Tạo queue mới
+  running = True  # Reset running state
+  
+  
+  # Chọn lại level khi trò chơi hoàn tất
+  screen = pygame.display.set_mode((1216, 640))
+  btns = sidebar_widgets(screen)
+  level = start_game(screen)
+  _game = game(level)
 
-    size = _game.load_size()
-    screen = pygame.display.set_mode(size)
-    stop_event = threading.Event()
-    option = choose_algo(screen=screen, btns=btns)
-    print("Algorithm:", option)
-    s = Search(option, _game.start_state, moves)
-         
-
-    # Đa luồng để khi nó chạy cái search thì màn hình luôn được render lại
-    start_time = time.time()
-    thread_render = threading.Thread(target=rerender_running, args=(screen, "Computing...", btns,  ))
-    thread_render.start()
-    weight, size , path, flag, node = s.search()
-    stop_event.set()
-    thread_render.join()
+  size = _game.load_size()
+  screen = pygame.display.set_mode(size)
+  stop_event = threading.Event()
+  option = choose_algo(screen=screen, btns=btns)
+  print("Algorithm:", option)
+  s = Search(option, _game.start_state, moves)
+  
+  weight = 0
+  size = 0
+  path = []
+  flag = []
+  node = 0
+  index = 0
+  start_time = time.time()
+  while running:
+    # 1. Xử lý tất cả events 
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            running = False
+            pygame.quit()
+            sys.exit()
+        # elif event.type in [SOLVE_BFS_EVENT, SOLVE_DFS_EVENT, SOLVE_UCS_EVENT, SOLVE_ASTAR_EVENT]:
+        #     if not searching:
+        #         searching = True
+        #         # Khởi động search thread
+        #         search_thread = threading.Thread(target=run_search, args=(event.type,))
+        #         search_thread.start()
+    if not searching:
+      searching = True
+      search_thread = threading.Thread(target=run_search, args=(s,))
+      search_thread.start()
+    if complete_search:
+      try:
+        result = result_queue.get_nowait()  # Dùng get_nowait() thay vì get()
+        if isinstance(result, Exception):
+          print("Search failed:", result)
+          running = False
+        else:
+          weight, size, path, flag, node = result
+          running = False
+      except queue.Empty:
+        pass  # Nếu chưa có kết quả, tiếp tục loop
+      
+    # 2. Render game state
     
     print_game(_game.start_state.get_matrix(), screen, step=0, boxes=_game.start_state.box)
-    
-    pygame.display.update()
-    end_time = time.time()
-    print("Time:",end_time-start_time)
-
-    move_list = path #load move from file. If file is empty, change this code to get move list
-    index = 0 
-    is_drawn = True  # Khởi tạo với True để bắt đầu di chuyển đầu tiên
-    total_weight = 0
-    on_pause = False
-    
-    while True:
-        for event in pygame.event.get():
-           if event.type == pygame.MOUSEBUTTONDOWN:
-              if pygame.Rect(1000, 350, 180, 40).collidepoint(event.pos):
-                 on_pause = not on_pause
-        if on_pause:
-           print_game(_game.start_state.get_matrix(), screen, index, total_weight, on_pause, boxes=_game.start_state.box)
-           continue
-        total_weight += flag[index]
+    for btn in btns:
+        btn.draw()
         
-        # Chỉ thực hiện di chuyển nếu lần cập nhật màn hình trước đó đã hoàn tất
-        if is_drawn and index < len(move_list):
-            dx, dy = move_list[index]
-            _game.start_state.get_child(dx, dy)  # Thực hiện di chuyển
-            index += 1
-            is_drawn = False  # Đặt lại flag, chờ việc vẽ hoàn tất
+    if searching:
+      display_box(screen, "Computing...")
+        
+    # 3. Update display
+    pygame.display.flip()
+    
+    pygame.time.delay(30) 
+         
 
-        # Cập nhật màn hình
-        print_game(_game.start_state.get_matrix(), screen, index, total_weight, on_pause, _game.start_state.box)
-        pygame.display.update()
-        is_drawn = True  # Đặt lại flag sau khi cập nhật xong màn hình
+  # # Đa luồng để khi nó chạy cái search thì màn hình luôn được render lại
+  # thread_render = threading.Thread(target=rerender_running, args=(screen, "Computing...", btns,  ))
+  # thread_render.start()
+  # weight, size , path, flag, node = s.search()
+  # stop_event.set()
+  # thread_render.join()
+    
+  print_game(_game.start_state.get_matrix(), screen, step=0, boxes=_game.start_state.box)
+    
+  pygame.display.update()
 
-        # Kiểm tra xem game đã hoàn tất hay chưa
-        if _game.start_state.is_completed():
-            print("Steps:", index)
-            print("Total weight pushed:", total_weight)
-            pygame.display.update()
-            display_end(screen=screen)
-            pygame.time.delay(7000)  # Đợi một lúc trước khi quay lại màn hình chọn
-            break  # Quay lại vòng lặp bên ngoài để chọn level mới
+  move_list = path #load move from file. If file is empty, change this code to get move list
+  index = 0 
+  is_drawn = True  # Khởi tạo với True để bắt đầu di chuyển đầu tiên
+  total_weight = 0
+  on_pause = False
+  end_time = time.time()
+  print("Search time:", end_time-start_time)
+  while True:
+      for event in pygame.event.get():
+          if event.type == pygame.MOUSEBUTTONDOWN:
+            if pygame.Rect(1000, 350, 180, 40).collidepoint(event.pos):
+              
+              on_pause = not on_pause
+          if event.type == pygame.QUIT:
+            pygame.quit()
+            sys.exit()
+            
+      if on_pause:
+        
+        print_game(_game.start_state.get_matrix(), screen, index, total_weight, on_pause, boxes=_game.start_state.box)
+        continue
+      total_weight += flag[index]
+        
+      # Chỉ thực hiện di chuyển nếu lần cập nhật màn hình trước đó đã hoàn tất
+      if is_drawn and index < len(move_list):
+          dx, dy = move_list[index]
+          _game.start_state.get_child(dx, dy)  # Thực hiện di chuyển
+          index += 1
+          is_drawn = False  # Đặt lại flag, chờ việc vẽ hoàn tất
 
-        pygame.time.delay(500)
+      # Cập nhật màn hình
+      print_game(_game.start_state.get_matrix(), screen, index, total_weight, on_pause, _game.start_state.box)
+      pygame.display.flip()
+      pygame.event.post(pygame.event.Event(RENDER_COMPLETE))
+      waiting = True
+        
+      #Đảm bảo vẽ xong mới cập nhật flag
+      while waiting:
+          for event in pygame.event.get():
+              if event.type == RENDER_COMPLETE:
+                is_drawn = True # Đặt lại flag sau khi cập nhật xong màn hình
+                waiting = False
+                    
+      # Kiểm tra xem game đã hoàn tất hay chưa
+      if _game.start_state.is_completed():
+          print("Steps:", index)
+          print("Weight:", total_weight)
+          pygame.display.update()
+          display_end(screen=screen)
+          pygame.time.delay(5000)  # Đợi một lúc trước khi quay lại màn hình chọn
+          break  # Quay lại vòng lặp bên ngoài để chọn level mới
+
+      pygame.time.delay(50)
