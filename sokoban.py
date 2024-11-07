@@ -382,4 +382,4 @@ while True:
           pygame.time.delay(5000)  # Đợi một lúc trước khi quay lại màn hình chọn
           break  # Quay lại vòng lặp bên ngoài để chọn level mới
 
-      pygame.time.delay(50)
+      pygame.time.delay(10)

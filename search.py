@@ -30,9 +30,9 @@ class Search:
                 if current_state.is_completed():
                     return current_weight, size/(1024**2) , path, flag, node
                 
-                solvable = utils.check_deadlock(current_state)
+                is_deadlock = utils.check_deadlock(current_state)
                 
-                if(solvable):
+                if(is_deadlock):
                     continue
 
 
@@ -73,9 +73,9 @@ class Search:
                 if current_state.is_completed():
                     return current_weight, size / (1024**2), path, flag, node
                 
-                solvable = utils.check_deadlock(current_state)
+                is_deadlock = utils.check_deadlock(current_state)
                 
-                if solvable:
+                if(is_deadlock):
                     continue
 
                 for move in self.moves:
@@ -102,44 +102,48 @@ class Search:
 
 
         elif self.search_alg == "UCS":
-            heap_states = [(0, "", self.start, [], 0, [])] # heap holds the same things above, first element is priority level
+            pq = PriorityQueue()
+            switches = utils.get_positions(self.start.matrix)
+            weight = 0
+            cost = 0 
+            counter = 0
+            pq.put((cost, counter, weight, self.start, [], []))
+            counter += 1
             StateSpace.open_close_set.add(self.start.to_string())
             node = 1
             size = sys.getsizeof(self.start)
-            while heap_states:
-                cost, child_string, current_state, path, current_weight, flag = heapq.heappop(heap_states)
+            while not pq.empty():
+                cost, _, current_weight, current_state, path, flag = pq.get()
+        
                 if current_state.is_completed():
                     return current_weight, size/(1024**2), path, flag, node
                 
-                solvable = utils.check_deadlock(current_state)
+                is_deadlock = utils.check_deadlock(current_state)
                 
-                if(solvable):
+                if(is_deadlock):
                     continue
-                
 
+            
                 for move in self.moves:
                     if current_state.can_move_or_push(move[0], move[1]):
                         child = copy.deepcopy(current_state)
                         res = child.get_child(move[0], move[1])
-                        child_cost = 0
-                        child_cost = cost + 1 + res[0]
-                        size+=sys.getsizeof(self.start)
+                        size+=sys.getsizeof(child)
 
-                        child_weight = res[0]  # Weight of the child state
+                        
                         child_string = child.to_string()
-
-                        # Only proceed if the state has not been visited
+                
                         if child_string not in StateSpace.open_close_set:
                             node += 1
                             StateSpace.open_close_set.add(child_string)
-
-
-                            # Add the child state to the heap with the accumulated weight
-                            heapq.heappush(heap_states, (child_cost, child_string, child, path + [move], current_weight + res[0], flag + [res[0]]))
+                            child_cost = 0
                             
-            return 0, size/(1024**2) , [], flag, node
+                            child_cost = cost + res[0] + 1  # Chi phí thực tế từ start đến node hiện tại
+                            pq.put((child_cost, counter, current_weight+ res[0], child, path + [move], flag + [res[0]]))
 
-        # (0, 1) (0, -1), (1, 0), (-1, 0)
+                            counter += 1                  
+            return 0, size/(1024**2), [], flag, node
+
         elif self.search_alg == 'A*':
             pq = PriorityQueue()
             switches = utils.get_positions(self.start.matrix)
@@ -159,9 +163,9 @@ class Search:
                 if current_state.is_completed():
                     return current_weight, size/(1024**2), path, flag, node
                 
-                solvable = utils.check_deadlock(current_state)
+                is_deadlock = utils.check_deadlock(current_state)
                 
-                if(solvable):
+                if(is_deadlock):
                     continue
 
             
