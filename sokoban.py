@@ -8,7 +8,7 @@ from widgets import sidebar_widgets
 from statespace import StateSpace
 from search import Search
 from game import game
-
+import time
 
 
 
@@ -220,6 +220,7 @@ while True:
          
 
     # Đa luồng để khi nó chạy cái search thì màn hình luôn được render lại
+    start_time = time.time()
     thread_render = threading.Thread(target=rerender_running, args=(screen, "Computing...", btns,  ))
     thread_render.start()
     weight, size , path, flag, node = s.search()
@@ -229,13 +230,15 @@ while True:
     print_game(_game.start_state.get_matrix(), screen, step=0, boxes=_game.start_state.box)
     
     pygame.display.update()
-
+    end_time = time.time()
+    print("Time:",end_time-start_time)
 
     move_list = path #load move from file. If file is empty, change this code to get move list
     index = 0 
     is_drawn = True  # Khởi tạo với True để bắt đầu di chuyển đầu tiên
     total_weight = 0
     on_pause = False
+    
     while True:
         for event in pygame.event.get():
            if event.type == pygame.MOUSEBUTTONDOWN:
@@ -260,9 +263,11 @@ while True:
 
         # Kiểm tra xem game đã hoàn tất hay chưa
         if _game.start_state.is_completed():
+            print("Steps:", index)
+            print("Total weight pushed:", total_weight)
             pygame.display.update()
             display_end(screen=screen)
-            pygame.time.delay(5000)  # Đợi một lúc trước khi quay lại màn hình chọn
+            pygame.time.delay(7000)  # Đợi một lúc trước khi quay lại màn hình chọn
             break  # Quay lại vòng lặp bên ngoài để chọn level mới
 
-        pygame.time.delay(800)
+        pygame.time.delay(500)
