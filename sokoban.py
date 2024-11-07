@@ -33,30 +33,6 @@ def draw_weight_on_box(number, x, y, image):
     # Vẽ số lên hình tròn
     screen.blit(text_surface, text_rect)
 def draw_pause_btn(screen, on_pause):
-    # button_x, button_y, button_width, button_height = 1000, 350, 180, 40
-    # radius = 5
-    # border_thickness = 2
-    # font = pygame.font.SysFont('Verdana', 14, bold=True)
-    # button_text = font.render("Pause/Continue", True, (0, 0, 0))
-    # button_rect = pygame.Rect(button_x, button_y, button_width, button_height)
-    # button_rect = pygame.Rect(button_x, button_y, button_width, button_height)
-
-    
-    # if on_pause:
-    #   color =  (200, 200, 200)
-    # else:
-    #   color = (150, 150, 150)
-
-    # pygame.draw.rect(screen, (0, 0, 0), button_rect, border_radius=radius)
-
-    # inner_rect = button_rect.inflate(-border_thickness*2, -border_thickness*2)
-    # pygame.draw.rect(screen, color, inner_rect, border_radius=radius)
-
-    # screen.blit(button_text, (button_x + (button_width - button_text.get_width()) // 2,
-    #                           button_y + (button_height - button_text.get_height()) // 2))
-    
-
-    # return button_x, button_y, button_width, button_height
     pause_x, pause_y = 1000, 350
     pause_width, pause_height = 180, 40
     radius = 5
@@ -91,11 +67,28 @@ def draw_pause_btn(screen, on_pause):
     screen.blit(restart_text, (restart_x + (restart_width - restart_text.get_width()) // 2,
                               restart_y + (restart_height - restart_text.get_height()) // 2))
     
-    # Trả về vị trí và kích thước của cả hai nút
+    # Vẽ nút Return
+    return_x, return_y = 1000, 450  # 10px gap below restart button
+    return_width, return_height = 180, 40
+    
+    return_font = pygame.font.SysFont('Verdana', 14, bold=True)
+    return_text = return_font.render("Select level", True, (0, 0, 0))
+    return_rect = pygame.Rect(return_x, return_y, return_width, return_height)
+    
+    pygame.draw.rect(screen, (0, 0, 0), return_rect, border_radius=radius)
+    return_inner_rect = return_rect.inflate(-border_thickness*2, -border_thickness*2)
+    pygame.draw.rect(screen, (150, 150, 150), return_inner_rect, border_radius=radius)
+    
+    screen.blit(return_text, (return_x + (return_width - return_text.get_width()) // 2,
+                              return_y + (return_height - return_text.get_height()) // 2))
+    
+    # Trả về vị trí và kích thước của cả ba nút
     return {
         'pause': (pause_x, pause_y, pause_width, pause_height),
-        'restart': (restart_x, restart_y, restart_width, restart_height)
+        'restart': (restart_x, restart_y, restart_width, restart_height),
+        'return': (return_x, return_y, return_width, return_height)
     }
+
 
    
 # def print_game(matrix,screen, step, total_weight=None, on_pause=None, boxes=None):
@@ -421,7 +414,6 @@ while True:
                     # Check Restart button
                     restart_rect = pygame.Rect(*buttons['restart'])
                     if restart_rect.collidepoint(mouse_pos):
-                        print("Press restart")
                         should_restart = True
                         break
                         
@@ -457,12 +449,22 @@ while True:
                     
         if _game.start_state.is_completed():
             should_restart = False
-            pygame.display.update()
-            display_end(screen=screen)
-            pygame.time.delay(3000)
+            on_return = True
+            while on_return:
+              pygame.display.update()
+              for event in pygame.event.get():
+                  if event.type == pygame.MOUSEBUTTONDOWN:
+                      mouse_pos = event.pos
+                      buttons = print_game(_game.start_state.get_matrix(), screen, index, total_weight, on_pause, _game.start_state.box)
+                      
+                      if buttons:
+                          return_rect = pygame.Rect(*buttons['return'])
+                          if return_rect.collidepoint(mouse_pos):
+                             on_return = False
+              display_end(screen=screen)
             break
 
-        pygame.time.delay(10)
+        pygame.time.delay(500)
   
   
   # while True:
