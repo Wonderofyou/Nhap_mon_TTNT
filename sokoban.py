@@ -8,6 +8,7 @@ from widgets import sidebar_widgets
 from statespace import StateSpace
 from search import Search
 from game import game
+import queue
 
 import pygame_widgets
 
@@ -177,7 +178,10 @@ background = 255, 226, 191
 pygame.init()
 moves = [(0, 1), (0, -1), (1, 0), (-1, 0)]
 running = True
-
+result_queue = queue.Queue()
+searching = False
+search_thread = None
+complete_search = False
 
 def handle_algorithm_selection(event):
     if event.type == SOLVE_ASTAR_EVENT:
@@ -233,18 +237,28 @@ os.environ['SDL_VIDEO_WINDOW_POS'] = "100,100"
 
 
 
-def run_search(algorithm_type):
-    try:
-        # Chạy thuật toán search trong thread riêng
-        weight, size, path, flag, node = s.search()
-        # Sử dụng queue để gửi kết quả về main thread
-        result_queue.put((weight, size, path, flag, node))
-    except Exception as e:
-        result_queue.put(e)
+def run_search(search_instance):
+  
+  global complete_search
+  try:
+      # Chạy thuật toán search trong thread riêng
+      weight, size, path, flag, node = search_instance.search()
+      # Sử dụng queue để gửi kết quả về main thread
+      result_queue.put((weight, size, path, flag, node))
+      complete_search = True
+  except Exception as e:
+      result_queue.put(e)
 
 
 
 while True:
+  
+  searching = False
+  complete_search = False
+  result_queue = queue.Queue()  # Tạo queue mới
+  running = True  # Reset running state
+  
+  
   # Chọn lại level khi trò chơi hoàn tất
   screen = pygame.display.set_mode((1216, 640))
   btns = sidebar_widgets(screen)
@@ -257,40 +271,64 @@ while True:
   option = choose_algo(screen=screen, btns=btns)
   print("Algorithm:", option)
   s = Search(option, _game.start_state, moves)
+  
+  weight = 0
+  size = 0
+  path = []
+  flag = []
+  node = 0
+  index = 0
+  
+  while running:
+    # 1. Xử lý tất cả events 
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            running = False
+            pygame.quit()
+            sys.exit()
+        # elif event.type in [SOLVE_BFS_EVENT, SOLVE_DFS_EVENT, SOLVE_UCS_EVENT, SOLVE_ASTAR_EVENT]:
+        #     if not searching:
+        #         searching = True
+        #         # Khởi động search thread
+        #         search_thread = threading.Thread(target=run_search, args=(event.type,))
+        #         search_thread.start()
+    if not searching:
+      searching = True
+      search_thread = threading.Thread(target=run_search, args=(s,))
+      search_thread.start()
+    if complete_search:
+      try:
+        result = result_queue.get_nowait()  # Dùng get_nowait() thay vì get()
+        if isinstance(result, Exception):
+          print("Search failed:", result)
+          running = False
+        else:
+          weight, size, path, flag, node = result
+          running = False
+      except queue.Empty:
+        pass  # Nếu chưa có kết quả, tiếp tục loop
+      
+    # 2. Render game state
     
-    
-    
-    
-    
-  searching = False
-  search_thread = None
-  # while running:
-  #   # 1. Xử lý tất cả events 
-  #   for event in pygame.event.get():
-  #       if event.type == pygame.QUIT:
-  #           running = False
-  #       elif event.type in [SOLVE_BFS_EVENT, SOLVE_DFS_EVENT, SOLVE_UCS_EVENT, SOLVE_ASTAR_EVENT]:
-  #           if not searching:
-  #               searching = True
-  #               # Khởi động search thread
-  #               search_thread = threading.Thread(target=run_search, args=(event.type,))
-  #               search_thread.start()
+    print_game(_game.start_state.get_matrix(), screen, step=0, boxes=_game.start_state.box)
+    for btn in btns:
+        btn.draw()
         
-  #   # 2. Render game state
-  #   print_game(_game.start_state.get_matrix(), screen, step=0, boxes=_game.start_state.box)
-  #   for btn in btns:
-  #       btn.draw()
+    if searching:
+      display_box(screen, "Computing...")
         
-  #   # 3. Update display
-  #   pygame.display.flip()
+    # 3. Update display
+    pygame.display.flip()
+    
+    pygame.time.delay(30) 
          
 
-  # Đa luồng để khi nó chạy cái search thì màn hình luôn được render lại
-  thread_render = threading.Thread(target=rerender_running, args=(screen, "Computing...", btns,  ))
-  thread_render.start()
-  weight, size , path, flag, node = s.search()
-  stop_event.set()
-  thread_render.join()
+  # # Đa luồng để khi nó chạy cái search thì màn hình luôn được render lại
+  # thread_render = threading.Thread(target=rerender_running, args=(screen, "Computing...", btns,  ))
+  # thread_render.start()
+  # weight, size , path, flag, node = s.search()
+  # stop_event.set()
+  # thread_render.join()
     
   print_game(_game.start_state.get_matrix(), screen, step=0, boxes=_game.start_state.box)
     
@@ -344,4 +382,4 @@ while True:
           pygame.time.delay(5000)  # Đợi một lúc trước khi quay lại màn hình chọn
           break  # Quay lại vòng lặp bên ngoài để chọn level mới
 
-      pygame.time.delay(800)
+      pygame.time.delay(30)
