@@ -3,10 +3,8 @@ from pygame_widgets.button import Button
 def sidebar_widgets(window):
     def create_click_handler(event_type, algo_name):
         def handler():
-            print(f"Clicking {algo_name} button")
             event = pygame.event.Event(event_type)
             pygame.event.post(event)
-            print(f"Posted event: {event_type}")
         return handler
     
     astar_button = Button(

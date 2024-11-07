@@ -176,7 +176,7 @@ worker_docked = pygame.image.load('images/worker_dock.png')
 docker = pygame.image.load('images/dock.png')
 background = 255, 226, 191
 pygame.init()
-moves = [(0, 1), (0, -1), (1, 0), (-1, 0)]
+moves = [(0, -1), (0, 1), (-1, 0), (1, 0)]
 running = True
 result_queue = queue.Queue()
 searching = False
@@ -382,4 +382,4 @@ while True:
           pygame.time.delay(5000)  # Đợi một lúc trước khi quay lại màn hình chọn
           break  # Quay lại vòng lặp bên ngoài để chọn level mới
 
-      pygame.time.delay(30)
+      pygame.time.delay(50)
