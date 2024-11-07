@@ -181,7 +181,7 @@ def choose_algo(screen, btns):
     while waiting_option:
         for event in pygame.event.get():
           if event.type == pygame.QUIT:
-            waiting_option = False   
+            waiting_option = False  
           if event.type == pygame.MOUSEBUTTONDOWN:
              x, y = event.pos
              if x >= w and x <= w + x0:
@@ -202,6 +202,7 @@ def rerender_running(screen, message_box, btns):
     display_box(screen, message_box)
 
 os.environ['SDL_VIDEO_WINDOW_POS'] = "100,100"
+
 
 
 while True:
@@ -255,9 +256,17 @@ while True:
 
         # Cập nhật màn hình
         print_game(_game.start_state.get_matrix(), screen, index, total_weight, on_pause, _game.start_state.box)
-        pygame.display.update()
-        is_drawn = True  # Đặt lại flag sau khi cập nhật xong màn hình
-
+        pygame.display.flip()
+        pygame.event.post(pygame.event.Event(RENDER_COMPLETE))
+        waiting = True
+        
+        #Đảm bảo vẽ xong mới cập nhật flag
+        while waiting:
+            for event in pygame.event.get():
+                if event.type == RENDER_COMPLETE:
+                    is_drawn = True # Đặt lại flag sau khi cập nhật xong màn hình
+                    waiting = False
+                    
         # Kiểm tra xem game đã hoàn tất hay chưa
         if _game.start_state.is_completed():
             pygame.display.update()
