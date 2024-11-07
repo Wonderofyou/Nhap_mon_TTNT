@@ -280,7 +280,6 @@ while True:
     # Chọn level và khởi tạo game
     screen = pygame.display.set_mode((1216, 640))
     btns = sidebar_widgets(screen)
-    print(should_restart)
     if not should_restart:
       level = start_game(screen)
     _game = game(level)
